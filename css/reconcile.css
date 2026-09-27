@@ -1,0 +1,256 @@
+/* ==========================================================================
+   FINNY RECONCILIATION PAGE STYLES
+   ========================================================================= */
+
+.reconcile-workspace-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.reconcile-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rec-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.rec-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.account-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.acc-icon-badge {
+  font-size: 20px;
+}
+
+.acc-meta-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.acc-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Top Hero Summary Card */
+.rec-hero-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.rec-hero-account {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rec-hero-account h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.rec-hero-metrics {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.rec-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rec-metric-item span {
+  font-size: 11px;
+}
+
+.rec-metric-item strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.how-it-works-banner {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.how-it-works-banner strong {
+  color: var(--text-primary);
+}
+
+.how-it-works-banner p {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.rec-card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.rec-card-header-row h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.rec-card-header-row p {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* 2-Column Split Grid for Monthly (Left) and Daily (Right) */
+.rec-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 20px;
+  align-items: start;
+  margin-top: 20px;
+}
+
+/* Selected Active Row Highlighting (Matching Reference Image) */
+.rec-row-selected td {
+  background-color: var(--finny-primary-tint) !important;
+  color: var(--finny-primary);
+  font-weight: 600;
+}
+
+/* Daily Ribbon */
+.daily-month-ribbon {
+  background-color: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+
+/* Daily Groups Stream */
+.daily-groups-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 650px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.day-group-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--bg-surface);
+}
+
+.day-group-header {
+  background-color: var(--bg-surface-secondary);
+  padding: 8px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.day-group-header:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.day-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.day-toggle-arrow {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.day-header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+}
+
+.day-end-badge {
+  font-weight: 700;
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.day-txns-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.day-txns-table td {
+  padding: 8px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.day-txns-table tr:hover td {
+  background-color: var(--bg-surface-hover);
+}
+
+@media (max-width: 1250px) {
+  .rec-split-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 950px) {
+  .reconcile-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -8,14 +8,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="css/global.css" />
-  <link rel="stylesheet" href="css/accounts.css" />
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/accounts.css" />
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <!-- Finny Navigation Bar -->
+  <!-- Global Navigation Header -->
   <header class="finny-nav">
     <div class="nav-left">
       <div class="brand-logo">
@@ -26,13 +27,12 @@
         </div>
       </div>
       <nav class="nav-links">
-        <a href="index.html" class="nav-item">Dashboard</a>
-        <a href="index.html" class="nav-item">Transactions</a>
-        <a href="accounts.html" class="nav-item active">Accounts</a>
-        <a href="#" class="nav-item">Plan</a>
-        <a href="#" class="nav-item">Insights</a>
-        <a href="#" class="nav-item">Goals</a>
-        <a href="#" class="nav-item">More</a>
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="accounts.html" class="nav-item">Accounts</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="import.html" class="nav-item">Import</a>
+        <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="settings.html" class="nav-item">Settings</a>
       </nav>
     </div>
     <div class="nav-right">
@@ -41,10 +41,8 @@
     </div>
   </header>
 
-  <!-- Accounts Page Shell -->
+  <!-- Accounts View (Visible by default) -->
   <main class="finny-shell">
-    
-    <!-- Page Header & As-of Date -->
     <section class="page-header">
       <div class="title-block">
         <h1>Accounts</h1>
@@ -58,11 +56,11 @@
           <input type="date" id="asOfDate" />
         </div>
         <button class="btn btn-secondary">More Actions ▾</button>
-        <button class="btn btn-primary" id="openAddAccountBtn">+ Add Account</button>
+        <button class="btn btn-primary" onclick="window.location.href='settings.html'">+ Add Account</button>
       </div>
     </section>
 
-    <!-- Four Top View Switcher Tabs -->
+    <!-- Sub-tabs -->
     <div class="accounts-tabs">
       <button class="acc-tab active" data-tab="balanceSheet">📑 Balance Sheet</button>
       <button class="acc-tab" data-tab="accountList">🗂️ Account List</button>
@@ -70,7 +68,7 @@
       <button class="acc-tab" data-tab="allocation">📊 Allocation</button>
     </div>
 
-    <!-- 4 Dynamic KPI Cards -->
+    <!-- 4 KPI Cards -->
     <section class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-icon-box income-icon">🏛️</div>
@@ -109,11 +107,10 @@
       </div>
     </section>
 
-    <!-- TAB 1: BALANCE SHEET VIEW -->
+    <!-- Sub-Tab 1: Balance Sheet -->
     <div id="tabBalanceSheet" class="tab-pane active">
       <div class="balance-sheet-grid">
-        
-        <!-- ASSETS CARD -->
+        <!-- Assets Card -->
         <div class="bs-card assets-card">
           <div class="bs-card-head">
             <div class="bs-title-wrap">
@@ -147,7 +144,7 @@
           </table>
         </div>
 
-        <!-- LIABILITIES CARD -->
+        <!-- Liabilities Card -->
         <div class="bs-card liabilities-card">
           <div class="bs-card-head">
             <div class="bs-title-wrap">
@@ -181,7 +178,7 @@
           </table>
         </div>
 
-        <!-- NET WORTH & ALLOCATION SIDE PANEL -->
+        <!-- Net Worth & Donut Panel -->
         <div class="bs-side-panel">
           <div class="nw-summary-card">
             <div class="nw-head">
@@ -197,24 +194,21 @@
             </div>
           </div>
 
-          <!-- Donut Allocation Mini -->
           <div class="allocation-donut-card">
             <h4>Asset Allocation</h4>
             <div id="donutLegend" class="donut-legend-list"></div>
           </div>
 
-          <!-- Key Insights -->
           <div class="insights-summary-card">
             <h4>💡 Key Insights ⓘ</h4>
             <ul class="insights-list" id="insightsList"></ul>
             <a href="#" class="rec-link">View Detailed Insights →</a>
           </div>
         </div>
-
       </div>
     </div>
 
-    <!-- TAB 2: ACCOUNT LIST VIEW -->
+    <!-- Sub-Tab 2: Account List -->
     <div id="tabAccountList" class="tab-pane">
       <div class="account-list-container">
         <div class="account-list-toolbar">
@@ -225,11 +219,6 @@
           <select id="accStatusFilter" class="select-box">
             <option value="ACTIVE">Active Only</option>
             <option value="ALL">All Statuses</option>
-          </select>
-          <select id="accSortBy" class="select-box">
-            <option value="balance_desc">Balance (High to Low)</option>
-            <option value="balance_asc">Balance (Low to High)</option>
-            <option value="name_asc">Name (A to Z)</option>
           </select>
         </div>
 
@@ -250,16 +239,16 @@
       </div>
     </div>
 
-    <!-- TAB 3: TRENDS VIEW -->
+    <!-- Sub-Tab 3: Trends -->
     <div id="tabTrends" class="tab-pane">
-      <div class="trends-container">
+      <div class="account-list-container">
         <h3>Net Worth & Growth History</h3>
         <p class="text-muted" style="margin-top:6px; margin-bottom: 20px;">Monthly aggregation derived from historical transaction ledger.</p>
-        <div id="monthlyTrendsList" class="trends-month-cards"></div>
+        <div id="monthlyTrendsList"></div>
       </div>
     </div>
 
-    <!-- TAB 4: ALLOCATION VIEW -->
+    <!-- Sub-Tab 4: Allocation -->
     <div id="tabAllocation" class="tab-pane">
       <div class="allocation-full-view">
         <div class="alloc-col">
@@ -272,20 +261,11 @@
         </div>
       </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="finny-footer">
-      <div class="footer-left">
-        <span>Last updated: Live Sync</span>
-        <button class="link-btn" onclick="location.reload()">↻ Refresh</button>
-      </div>
-      <div class="footer-center">🔒 Your data is safe and secure</div>
-      <div class="footer-right">Finny v1.0</div>
-    </footer>
   </main>
 
-  <script src="js/supabaseClient.js"></script>
-  <script src="js/common.js"></script>
-  <script src="js/accounts.js"></script>
+  <!-- Modular Scripts -->
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/accounts.js"></script>
 </body>
 </html>

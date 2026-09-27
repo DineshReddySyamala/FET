@@ -1,5 +1,5 @@
 // ==========================================================================
-// COMMON HELPERS & THEME ENGINE
+// COMMON HELPERS, THEME ENGINE & NAV HIGHLIGHTER
 // ==========================================================================
 
 // Currency Formatter (Indian Rupee)
@@ -20,65 +20,74 @@ window.formatDateHeader = function(dateStr) {
   return d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+// Global Nav Active Highlighter based on current filename
+window.initNavigation = function() {
+  const path = window.location.pathname;
+  const page = path.split("/").pop() || 'index.html';
+
+  document.querySelectorAll('.nav-links .nav-item').forEach(link => {
+    const href = link.getAttribute('href');
+    if (href === page || (page === '' && href === 'index.html')) {
+      link.classList.add('active');
+    } else {
+      link.classList.remove('active');
+    }
+  });
+};
+
 // Theme Management System
 window.initThemeSystem = function() {
   const themeBtn = document.getElementById('themeToggleBtn');
-  if (!themeBtn) return;
-
   const savedTheme = localStorage.getItem('finny-theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
-  themeBtn.textContent = savedTheme === 'light' ? '🌙' : '☀️';
+  if (themeBtn) themeBtn.textContent = savedTheme === 'light' ? '🌙' : '☀️';
 
-  themeBtn.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', nextTheme);
-    localStorage.setItem('finny-theme', nextTheme);
-    themeBtn.textContent = nextTheme === 'light' ? '🌙' : '☀️';
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      localStorage.setItem('finny-theme', nextTheme);
+      themeBtn.textContent = nextTheme === 'light' ? '🌙' : '☀️';
+    });
+  }
+};
+
+// Universal Modal Closer
+window.closeAllModals = function() {
+  document.querySelectorAll('.modal-overlay').forEach(modal => {
+    modal.classList.remove('open');
   });
 };
+
+document.addEventListener('click', (e) => {
+  if (e.target.matches('.modal-close-btn') || e.target.closest('.modal-close-btn')) {
+    window.closeAllModals();
+  } else if (e.target.matches('.modal-footer .btn-secondary')) {
+    window.closeAllModals();
+  } else if (e.target.classList.contains('modal-overlay')) {
+    window.closeAllModals();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') window.closeAllModals();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   window.initThemeSystem();
+  window.initNavigation();
 });
 
 // ==========================================================================
-// SPA ROUTER: SWITCH BETWEEN TRANSACTIONS, ACCOUNTS, ETC.
+// FINNY STANDARDIZED HASH GENERATOR (SHARED UTILITY)
 // ==========================================================================
-window.switchPage = function(pageId) {
-  // 1. Hide all page views
-  document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
-
-  // 2. Remove active state from nav items
-  document.querySelectorAll('.nav-item').forEach(link => link.classList.remove('active'));
-
-  // 3. Show targeted page view
-  const targetPage = document.getElementById(pageId);
-  if (targetPage) {
-    targetPage.style.display = 'flex';
+window.generateFinnyHashId = function(dateStr, timeStr, amount) {
+  const cleanDate = (dateStr || '').replace(/-/g, '').slice(0, 8);
+  let cleanTime = '000000';
+  if (timeStr && timeStr.includes(':')) {
+    cleanTime = timeStr.replace(/[^0-9]/g, '').padEnd(6, '0').slice(0, 6);
   }
-
-  // 4. Highlight matching nav item
-  const activeLink = document.querySelector(`.nav-item[data-page="${pageId}"]`);
-  if (activeLink) {
-    activeLink.classList.add('active');
-  }
-
-  // 5. Trigger page-specific loads
-  if (pageId === 'pageAccounts' && window.loadAccountsData) {
-    window.loadAccountsData();
-  }
+  const amountInPaise = Math.round(Math.abs(Number(amount || 0)) * 100);
+  return `H${cleanDate}${cleanTime}${amountInPaise}`;
 };
-
-// Listen to top navigation clicks
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.nav-links .nav-item').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetPageId = link.getAttribute('data-page');
-      if (targetPageId && document.getElementById(targetPageId)) {
-        window.switchPage(targetPageId);
-      }
-    });
-  });
-});

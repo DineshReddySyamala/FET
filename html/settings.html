@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finny — Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Correct Relative Paths (../css/) -->
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/settings.css" />
+  <link rel="stylesheet" href="../css/settings-accounts.css" />
+  <link rel="stylesheet" href="../css/settings-categories.css" />
+  <link rel="stylesheet" href="../css/settings-financialdata.css" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Finny Navigation Bar -->
+  <header class="finny-nav">
+    <div class="nav-left">
+      <div class="brand-logo">
+        <span class="logo-box">FF</span>
+        <div class="brand-text">
+          <span class="brand-name">Finny</span>
+          <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="accounts.html" class="nav-item">Accounts</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="import.html" class="nav-item">Import</a>
+        <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="settings.html" class="nav-item active">Settings</a>
+      </nav>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">🌙</button>
+      <div class="user-avatar" title="Dinesh Reddy">DR</div>
+    </div>
+  </header>
+
+  <main class="finny-shell">
+    <div class="settings-shell">
+
+      <!-- LEFT SIDEBAR -->
+      <aside class="settings-sidebar">
+        <div class="settings-sidebar-header">
+          <span style="font-size: 20px;">⚙️</span>
+          <div>
+            <h2>Settings</h2>
+            <p>Manage your preferences and data</p>
+          </div>
+        </div>
+
+        <div class="settings-nav-group">
+          <span class="settings-nav-label">Account</span>
+          <a class="settings-nav-link" id="menuProfile" onclick="switchSettingsSection('profile')"><span>👤</span> Profile</a>
+          <a class="settings-nav-link" id="menuPreferences" onclick="switchSettingsSection('preferences')"><span>⚙️</span> Preferences</a>
+          <a class="settings-nav-link" id="menuSecurity" onclick="switchSettingsSection('security')"><span>🛡️</span> Security</a>
+          <a class="settings-nav-link" id="menuNotifications" onclick="switchSettingsSection('notifications')"><span>🔔</span> Notifications</a>
+        </div>
+
+        <div class="settings-nav-group">
+          <span class="settings-nav-label">Financial Data</span>
+          <a class="settings-nav-link active" id="menuAccountsGroups" onclick="switchSettingsSection('accounts')"><span>🏛️</span> Accounts & Groups</a>
+          <a class="settings-nav-link" id="menuCategories" onclick="switchSettingsSection('categories')"><span>🏷️</span> Categories</a>
+          <a class="settings-nav-link" id="menuAccountMapping" onclick="switchSettingsSection('account-mapping')"><span>🔄</span> Import Account Mapping</a>
+          <a class="settings-nav-link" id="menuPayees" onclick="switchSettingsSection('payees')"><span>👥</span> Payees</a>
+          <a class="settings-nav-link" id="menuLabels" onclick="switchSettingsSection('labels')"><span>🔖</span> Labels</a>
+          <a class="settings-nav-link" id="menuRecurring" onclick="switchSettingsSection('recurring')"><span>🔁</span> Recurring Rules</a>
+          <a class="settings-nav-link" id="menuImportExport" onclick="switchSettingsSection('import-export')"><span>📥</span> Import & Export</a>
+        </div>
+
+        <div class="settings-nav-group">
+          <span class="settings-nav-label">App Settings</span>
+          <a class="settings-nav-link" id="menuAppearance" onclick="switchSettingsSection('appearance')"><span>☀️</span> Appearance</a>
+          <a class="settings-nav-link" id="menuCurrency" onclick="switchSettingsSection('currency')"><span>🌐</span> Currency & Localization</a>
+          <a class="settings-nav-link" id="menuPrivacy" onclick="switchSettingsSection('privacy')"><span>🔒</span> Data & Privacy</a>
+        </div>
+
+        <div class="settings-nav-group">
+          <span class="settings-nav-label">Support</span>
+          <a class="settings-nav-link" id="menuHelp" onclick="switchSettingsSection('help')"><span>❓</span> Help & Support</a>
+          <a class="settings-nav-link" id="menuAbout" onclick="switchSettingsSection('about')"><span>ℹ️</span> About Finny</a>
+        </div>
+      </aside>
+
+      <!-- RIGHT CONTENT AREA -->
+      <div class="settings-content">
+        
+        <!-- SECTION 1: ACCOUNTS & GROUPS -->
+        <div id="settingsAccountsSection">
+          <header class="settings-content-header" style="margin-bottom: 20px;">
+            <div class="settings-title-block">
+              <h1>Account Groups & Accounts</h1>
+              <p>Expand groups to inspect accounts or reassign them to different groups instantly.</p>
+            </div>
+
+            <div class="settings-actions">
+              <input type="text" id="settingsSearchInput" placeholder="Search groups or accounts..." class="search-input-wrap form-input" style="min-width: 240px;" />
+              <button class="btn btn-secondary" onclick="openCreateAccountModal()">+ Add Account</button>
+              <button class="btn btn-primary" onclick="openCreateGroupModal()">+ Add Group</button>
+            </div>
+          </header>
+
+          <div class="settings-workspace-layout">
+            <div class="group-tables-wrap">
+              <!-- Asset Groups Card -->
+              <div class="settings-card">
+                <div class="settings-card-head">
+                  <span class="bs-badge-icon asset-badge">🏛️</span>
+                  <div>
+                    <h2>Asset Groups</h2>
+                    <p>Click any row to expand accounts or reassign them</p>
+                  </div>
+                </div>
+                <table class="finny-table">
+                  <thead>
+                    <tr>
+                      <th width="32"></th>
+                      <th>Group / Account Name</th>
+                      <th>Description / Details</th>
+                      <th class="text-center">Accounts</th>
+                      <th class="text-right">Balance</th>
+                      <th>Status</th>
+                      <th width="70" class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="settingsAssetGroupsBody"></tbody>
+                </table>
+              </div>
+
+              <!-- Liability Groups Card -->
+              <div class="settings-card">
+                <div class="settings-card-head">
+                  <span class="bs-badge-icon liability-badge">💳</span>
+                  <div>
+                    <h2>Liability Groups</h2>
+                    <p>Click any row to expand debts and loans</p>
+                  </div>
+                </div>
+                <table class="finny-table">
+                  <thead>
+                    <tr>
+                      <th width="32"></th>
+                      <th>Group / Account Name</th>
+                      <th>Description / Details</th>
+                      <th class="text-center">Accounts</th>
+                      <th class="text-right">Balance</th>
+                      <th>Status</th>
+                      <th width="70" class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="settingsLiabilityGroupsBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right Info Panel -->
+            <div class="settings-info-card">
+              <div class="info-block">
+                <h3>ℹ️ Inline Management</h3>
+                <p>Click on any group row to reveal the accounts assigned to it. Click the <strong>⇄</strong> button on an account to reassign it to another group in 2 seconds.</p>
+              </div>
+              <div class="info-block">
+                <h3>💡 Safety Rules</h3>
+                <ul class="info-tips-list">
+                  <li>Groups with active accounts cannot be deleted.</li>
+                  <li>Accounts with transactions cannot be deleted; move or archive them instead.</li>
+                  <li>Moving an account between groups instantly updates your Balance Sheet calculations.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: CATEGORIES & GROUPS -->
+        <div id="settingsCategoriesSection" style="display: none;">
+          <header class="settings-content-header" style="margin-bottom: 20px;">
+            <div class="settings-title-block">
+              <h1>Category Groups & Categories</h1>
+              <p>Expand category groups to inspect categories or reassign them to different groups instantly.</p>
+            </div>
+
+            <div class="settings-actions">
+              <input type="text" id="catSearchInput" placeholder="Search categories or groups..." class="search-input-wrap form-input" style="min-width: 240px;" />
+              <button class="btn btn-secondary" onclick="openCreateCategoryModal()">+ Add Category</button>
+              <button class="btn btn-primary" onclick="openCreateCatGroupModal()">+ Add Category Group</button>
+            </div>
+          </header>
+
+          <div class="settings-workspace-layout">
+            <div class="group-tables-wrap">
+              <!-- Expense Groups Card -->
+              <div class="settings-card">
+                <div class="settings-card-head">
+                  <span class="bs-badge-icon liability-badge">🛒</span>
+                  <div>
+                    <h2>Expense Groups</h2>
+                    <p>Click any row to expand child categories or reassign them</p>
+                  </div>
+                </div>
+                <table class="finny-table">
+                  <thead>
+                    <tr>
+                      <th width="32"></th>
+                      <th>Group / Category Name</th>
+                      <th>Description</th>
+                      <th class="text-center">Categories</th>
+                      <th class="text-right">Total Spent</th>
+                      <th>Status</th>
+                      <th width="70" class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="settingsExpenseCatGroupsBody"></tbody>
+                </table>
+              </div>
+
+              <!-- Income Groups Card -->
+              <div class="settings-card">
+                <div class="settings-card-head">
+                  <span class="bs-badge-icon asset-badge">💼</span>
+                  <div>
+                    <h2>Income Groups</h2>
+                    <p>Click any row to expand income streams</p>
+                  </div>
+                </div>
+                <table class="finny-table">
+                  <thead>
+                    <tr>
+                      <th width="32"></th>
+                      <th>Group / Category Name</th>
+                      <th>Description</th>
+                      <th class="text-center">Categories</th>
+                      <th class="text-right">Total Income</th>
+                      <th>Status</th>
+                      <th width="70" class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="settingsIncomeCatGroupsBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right Info Panel -->
+            <div class="settings-info-card">
+              <div class="info-block">
+                <h3>ℹ️ Category Management</h3>
+                <p>Click any category group to reveal its child categories. Click <strong>⇄</strong> on a category to reassign it to a new parent group immediately.</p>
+              </div>
+              <div class="info-block">
+                <h3>💡 Transaction Safety</h3>
+                <ul class="info-tips-list">
+                  <li>Groups with active categories cannot be deleted.</li>
+                  <li>Categories with historical transactions cannot be deleted to preserve reporting integrity.</li>
+                  <li>Renaming or moving a category preserves all historical transactions via stable category IDs.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: IMPORT ACCOUNT MAPPING (SWAPPABLE TAB VIEW) -->
+        <div id="settingsAccountMappingSection" style="display: none;">
+          <header class="settings-content-header" style="margin-bottom: 20px;">
+            <div class="settings-title-block">
+              <h1>Import Account Mapping</h1>
+              <p>Map raw account strings from statement files (e.g. Paytm, Bank statements) to your official Finny accounts.</p>
+            </div>
+            <div class="settings-actions">
+              <button class="btn btn-primary" onclick="openAddMappingModal()">+ Add New Mapping</button>
+            </div>
+          </header>
+
+          <div class="settings-card">
+            <div class="settings-table-responsive">
+              <table class="finny-table mapping-table">
+                <thead>
+                  <tr>
+                    <th>Source Statement Account</th>
+                    <th>Mapped Finny Account</th>
+                    <th>Status</th>
+                    <th class="text-right" width="90">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="accountMappingTableBody">
+                  <tr>
+                    <td colspan="4" class="text-center text-muted" style="padding: 24px;">Loading account mappings...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="groupModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="groupModalTitle">Create Account Group</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editGroupId" />
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Group Name *</label>
+            <input type="text" id="groupNameInput" class="form-input" placeholder="e.g. Education Fund" />
+          </div>
+          <div class="form-field">
+            <label>Type *</label>
+            <div class="type-segmented-control">
+              <button type="button" class="type-pill-btn active asset" data-type="Asset">🏛️ Asset Group</button>
+              <button type="button" class="type-pill-btn liability" data-type="Liability">💳 Liability Group</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Description</label>
+          <textarea id="groupDescInput" class="form-textarea" placeholder="Describe the purpose of this group..."></textarea>
+        </div>
+        <div class="form-field">
+          <label>Icon</label>
+          <div class="icon-palette" id="groupIconPalette">
+            <div class="icon-choice selected" data-icon="🏛️">🏛️</div>
+            <div class="icon-choice" data-icon="💵">💵</div>
+            <div class="icon-choice" data-icon="📈">📈</div>
+            <div class="icon-choice" data-icon="🏠">🏠</div>
+            <div class="icon-choice" data-icon="🚗">🚗</div>
+            <div class="icon-choice" data-icon="🎓">🎓</div>
+            <div class="icon-choice" data-icon="💳">💳</div>
+            <div class="icon-choice" data-icon="🪙">🪙</div>
+            <div class="icon-choice" data-icon="🏷️">🏷️</div>
+          </div>
+        </div>
+        <div class="form-field" style="width: 140px;">
+          <label>Display Order</label>
+          <input type="number" id="groupOrderInput" class="form-input" value="1" min="1" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveGroup()">Save Group</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="accountModal">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3 id="accountModalTitle">Create Account</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editAccountId" />
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Account Name *</label>
+            <input type="text" id="accNameInput" class="form-input" placeholder="e.g. HDFC Salary" />
+          </div>
+          <div class="form-field">
+            <label>Account Group *</label>
+            <select id="accGroupSelect" class="form-select"></select>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Account Type *</label>
+            <select id="accTypeSelect" class="form-select">
+              <option value="Savings">Savings</option>
+              <option value="Current">Current</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Wallet">Wallet</option>
+              <option value="Investment">Investment</option>
+              <option value="Loan">Loan</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Institution</label>
+            <input type="text" id="accInstitutionInput" class="form-input" placeholder="e.g. HDFC Bank, Kotak" />
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Opening Balance</label>
+            <input type="number" id="accOpeningBalanceInput" class="form-input" value="0.00" step="0.01" />
+          </div>
+          <div class="form-field">
+            <label>Account Number (Masked)</label>
+            <input type="text" id="accMaskedNumberInput" class="form-input" placeholder="**** 1234" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Notes</label>
+          <textarea id="accNotesInput" class="form-textarea" placeholder="Optional notes..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAccount()">Save Account</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="moveAccountModal">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>Move Account to Another Group</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="moveTargetAccountId" />
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
+          Select destination group for <strong id="moveAccountName" style="color:var(--text-primary);">Account</strong>:
+        </p>
+        <div class="form-field">
+          <label>Target Group *</label>
+          <select id="moveTargetGroupSelect" class="form-select"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+        <button class="btn btn-primary" onclick="executeMoveAccount()">Update Group</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 id="deleteModalTitle">Delete Item?</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteModalMessage" style="font-size: 13px; line-height: 1.5; color: var(--text-secondary);"></p>
+        <div id="deleteWarningBox" class="warning-box" style="display: none;">
+          <span style="font-size: 16px;">⚠️</span>
+          <span id="deleteWarningText"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+        <button class="btn btn-danger-outline" id="confirmDeleteBtn" style="background:var(--finny-expense); color:#fff; border:none;">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="catGroupModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="catGroupModalTitle">Create Category Group</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editCatGroupId" />
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Group Name *</label>
+            <input type="text" id="catGroupNameInput" class="form-input" placeholder="e.g. Food & Dining" />
+          </div>
+          <div class="form-field">
+            <label>Type *</label>
+            <div class="type-segmented-control">
+              <button type="button" class="type-pill-btn active asset" id="catTypeExpenseBtn" onclick="setCatGroupType('Expense')">🛒 Expense</button>
+              <button type="button" class="type-pill-btn liability" id="catTypeIncomeBtn" onclick="setCatGroupType('Income')">💼 Income</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Description</label>
+          <textarea id="catGroupDescInput" class="form-textarea" placeholder="Describe this category group..."></textarea>
+        </div>
+        <div class="form-field">
+          <label>Icon</label>
+          <div class="icon-palette" id="catGroupIconPalette">
+            <div class="icon-choice selected" data-icon="🍽️" onclick="selectCatGroupIcon('🍽️', this)">🍽️</div>
+            <div class="icon-choice" data-icon="🛒" onclick="selectCatGroupIcon('🛒', this)">🛒</div>
+            <div class="icon-choice" data-icon="🚗" onclick="selectCatGroupIcon('🚗', this)">🚗</div>
+            <div class="icon-choice" data-icon="⚡" onclick="selectCatGroupIcon('⚡', this)">⚡</div>
+            <div class="icon-choice" data-icon="🎬" onclick="selectCatGroupIcon('🎬', this)">🎬</div>
+            <div class="icon-choice" data-icon="🏥" onclick="selectCatGroupIcon('🏥', this)">🏥</div>
+            <div class="icon-choice" data-icon="💼" onclick="selectCatGroupIcon('💼', this)">💼</div>
+            <div class="icon-choice" data-icon="🏷️" onclick="selectCatGroupIcon('🏷️', this)">🏷️</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCategoryGroup()">Save Group</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="categoryModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="categoryModalTitle">Create Category</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editCategoryId" />
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Category Name *</label>
+            <input type="text" id="categoryNameInput" class="form-input" placeholder="e.g. Groceries" />
+          </div>
+          <div class="form-field">
+            <label>Parent Group *</label>
+            <select id="categoryParentGroupSelect" class="form-select"></select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCategory()">Save Category</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="moveCategoryModal">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>Move Category</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="moveTargetCatId" />
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
+          Select destination group for <strong id="moveCatName" style="color:var(--text-primary);">Category</strong>:
+        </p>
+        <div class="form-field">
+          <label>Target Category Group *</label>
+          <select id="moveTargetCatGroupSelect" class="form-select"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+        <button class="btn btn-primary" onclick="executeMoveCategory()">Update Group</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD ACCOUNT MAPPING MODAL -->
+  <div class="modal-overlay" id="addMappingModal">
+    <div class="modal-box" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>Add Account Mapping</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-field" style="margin-bottom: 14px;">
+          <label>Raw Statement Account Name *</label>
+          <input type="text" id="newRawAccountInput" class="form-input" placeholder="e.g. Kotak Mahindra Bank - 66" />
+          <small class="text-muted" style="display:block; margin-top:4px;">Enter the exact account text found in your statement column.</small>
+        </div>
+
+        <div class="form-field">
+          <label>Target Finny Account *</label>
+          <select id="newTargetAccountSelect" class="form-select"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveNewAccountMapping()">Save Mapping</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Correct Relative Script Paths (../js/) -->
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/settings.js"></script>
+  <script src="../js/settings-accounts.js"></script>
+  <script src="../js/settings-categories.js"></script>
+  <script src="../js/settings-financialdata.js"></script>
+</body>
+</html>

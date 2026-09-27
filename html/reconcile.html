@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finny — Reconciliation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/reconcile.css" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Global Navigation Header -->
+  <header class="finny-nav">
+    <div class="nav-left">
+      <div class="brand-logo">
+        <span class="logo-box">FF</span>
+        <div class="brand-text">
+          <span class="brand-name">Finny</span>
+          <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="accounts.html" class="nav-item">Accounts</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="import.html" class="nav-item">Import</a>
+        <a href="reconcile.html" class="nav-item active">Reconcile</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">🌙</button>
+      <div class="user-avatar" title="Dinesh Reddy">DR</div>
+    </div>
+  </header>
+
+  <!-- Reconciliation Shell -->
+  <main class="finny-shell">
+
+    <!-- Page Header & Info Banner -->
+    <section class="page-header">
+      <div class="title-block">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h1>Reconciliation</h1>
+          <span class="badge" style="background:var(--finny-primary-tint); color:var(--finny-primary); font-size:11px; padding:2px 8px; border-radius:var(--radius-pill); font-weight:700;">Beta</span>
+        </div>
+        <p>Verify and reconcile account balances to ensure your financial data is accurate.</p>
+      </div>
+
+      <div class="header-actions">
+        <div class="how-it-works-banner">
+          <span style="font-size: 18px;">💡</span>
+          <div>
+            <strong>How it works?</strong>
+            <p>Set your opening balance, then verify year-wise, month-wise, and day-wise balances.</p>
+          </div>
+        </div>
+        <button class="btn btn-secondary">More Actions ▾</button>
+      </div>
+    </section>
+
+    <!-- 2-Column Investigation Layout -->
+    <div class="reconcile-workspace-grid">
+
+      <!-- LEFT SIDEBAR: Account Selection & Settings -->
+      <aside class="reconcile-sidebar">
+        
+        <!-- Account Picker Card -->
+        <div class="rec-card">
+          <label class="rec-card-title">Select Account</label>
+          <div class="account-select-wrap">
+            <span class="acc-icon-badge">🏛️</span>
+            <select id="recAccountSelect" class="form-select" style="font-weight: 600; width: 100%;"></select>
+          </div>
+
+          <div class="acc-meta-rows">
+            <div class="acc-meta-row">
+              <span class="text-muted">Account Type</span>
+              <span id="recMetaType" class="font-semibold">—</span>
+            </div>
+            <div class="acc-meta-row">
+              <span class="text-muted">Institution</span>
+              <span id="recMetaInstitution" class="font-semibold">—</span>
+            </div>
+            <div class="acc-meta-row">
+              <span class="text-muted">Imported Transactions</span>
+              <span id="recMetaCount" class="font-semibold">0</span>
+            </div>
+            <div class="acc-meta-row">
+              <span class="text-muted">Date Range</span>
+              <span id="recMetaDateRange" class="font-semibold" style="font-size: 11px;">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reconciliation Settings (Opening Baseline) -->
+        <div class="rec-card">
+          <label class="rec-card-title">Reconciliation Settings</label>
+          <p class="text-muted" style="font-size: 11px; margin-bottom: 12px;">Opening balance baseline:</p>
+
+          <div class="form-field" style="margin-bottom: 10px;">
+            <label>Opening Balance (₹)</label>
+            <input type="number" id="recOpeningBalanceInput" class="form-input" step="0.01" />
+          </div>
+
+          <div class="form-field" style="margin-bottom: 14px;">
+            <label>Opening Date</label>
+            <input type="date" id="recOpeningDateInput" class="form-input" />
+          </div>
+
+          <button class="btn btn-primary w-100" id="saveOpeningBalanceBtn">Update Opening Balance</button>
+        </div>
+
+        <!-- Import Metadata Info Card -->
+        <div class="rec-card">
+          <label class="rec-card-title">Imported Data Info</label>
+          <div class="acc-meta-rows">
+            <div class="acc-meta-row">
+              <span class="text-muted">Source</span>
+              <span class="font-semibold">Bluecoins</span>
+            </div>
+            <div class="acc-meta-row">
+              <span class="text-muted">Account ID</span>
+              <span id="recSourceAccId" class="font-semibold" style="font-family: monospace;">—</span>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- RIGHT MAIN: Layout matching reference image -->
+      <section class="reconcile-main-content">
+
+        <!-- Top Account Summary Hero Card -->
+        <div class="rec-hero-card">
+          <div class="rec-hero-account">
+            <span class="bs-badge-icon asset-badge" id="recHeroIcon">🏛️</span>
+            <div>
+              <h2 id="recHeroAccountName">Select Account</h2>
+              <span class="text-muted" id="recHeroMasked">•••• 0000</span>
+            </div>
+          </div>
+
+          <div class="rec-hero-metrics">
+            <div class="rec-metric-item">
+              <span class="text-muted">Opening Balance</span>
+              <strong id="heroOpeningBal">₹0.00</strong>
+              <span class="text-muted" id="heroOpeningDate" style="font-size: 10px;">01 Jan 2022</span>
+            </div>
+
+            <div class="rec-metric-item">
+              <span class="text-muted">Total Credits</span>
+              <strong id="heroTotalCredits" class="income-val">+₹0.00</strong>
+            </div>
+
+            <div class="rec-metric-item">
+              <span class="text-muted">Total Debits</span>
+              <strong id="heroTotalDebits" class="expense-val">-₹0.00</strong>
+            </div>
+
+            <div class="rec-metric-item">
+              <span class="text-muted">Calculated Balance</span>
+              <strong id="heroCalculatedBal" style="font-size: 20px; color: var(--finny-primary);">₹0.00</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. YEARLY RECONCILIATION CARD (FULL WIDTH) -->
+        <div class="rec-card" style="margin-top: 20px;">
+          <div class="rec-card-header-row">
+            <div>
+              <h3>Yearly Reconciliation</h3>
+              <p class="text-muted">Review balance at the end of each year. Click any year to inspect its monthly breakdown below.</p>
+            </div>
+          </div>
+
+          <table class="finny-table">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th class="text-right">Opening Balance (₹)</th>
+                <th class="text-right">Total Credits (₹)</th>
+                <th class="text-right">Total Debits (₹)</th>
+                <th class="text-right">Calculated Closing (₹)</th>
+                <th class="text-center">Transactions</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recYearlyTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- 2. SPLIT GRID: MONTHLY (LEFT) & DAILY (RIGHT) -->
+        <div class="rec-split-grid">
+          
+          <!-- LEFT: MONTHLY RECONCILIATION -->
+          <div class="rec-card">
+            <div class="rec-card-header-row">
+              <div>
+                <h3 id="monthlyTitleYear">Monthly Reconciliation</h3>
+                <p class="text-muted">Click a month to view its daily ledger.</p>
+              </div>
+            </div>
+
+            <table class="finny-table">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th class="text-right">Opening (₹)</th>
+                  <th class="text-right">Credits (₹)</th>
+                  <th class="text-right">Debits (₹)</th>
+                  <th class="text-right">Closing (₹)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recMonthlyTableBody"></tbody>
+            </table>
+          </div>
+
+          <!-- RIGHT: DAILY TRANSACTIONS -->
+          <div class="rec-card">
+            <div class="rec-card-header-row">
+              <div>
+                <h3 id="dailyTitleHeader">Daily Transactions</h3>
+                <p class="text-muted">Review day-wise transactions and running balance.</p>
+              </div>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                <input type="checkbox" id="toggleDayEndBal" checked /> Show day-end balance
+              </label>
+            </div>
+
+            <!-- Month Summary Ribbon -->
+            <div class="daily-month-ribbon" id="dailyMonthRibbon">
+              <div>Opening: <strong id="ribbonOpening">₹0.00</strong></div>
+              <div>Credits: <strong id="ribbonCredits" class="income-val">+₹0.00</strong></div>
+              <div>Debits: <strong id="ribbonDebits" class="expense-val">-₹0.00</strong></div>
+              <div>Closing: <strong id="ribbonClosing" style="color:var(--finny-primary)">₹0.00</strong></div>
+            </div>
+
+            <!-- Day Grouping Stream -->
+            <div id="dailyGroupsContainer" class="daily-groups-stream"></div>
+          </div>
+
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- MODAL: EDIT TRANSACTION -->
+  <div class="modal-overlay" id="editTxnModal">
+    <div class="modal-box" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3>Edit Transaction</h3>
+        <button class="modal-close-btn" onclick="closeAllModals()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editTxnId" />
+        
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Date *</label>
+            <input type="date" id="editTxnDate" class="form-input" />
+          </div>
+          <div class="form-field">
+            <label>Amount (₹) *</label>
+            <input type="number" id="editTxnAmount" class="form-input" step="0.01" />
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Payee / Description *</label>
+            <input type="text" id="editTxnDescription" class="form-input" />
+          </div>
+          <div class="form-field">
+            <label>Transaction Type *</label>
+            <select id="editTxnType" class="form-select">
+              <option value="Expense">Expense (-)</option>
+              <option value="Income">Income (+)</option>
+              <option value="Transfer">Transfer</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Category</label>
+          <select id="editTxnCategory" class="form-select"></select>
+        </div>
+
+        <div class="warning-box" style="margin-top: 4px;">
+          <span>ℹ️</span>
+          <span>Saving this edit will instantly recalculate all subsequent daily, monthly, and yearly balances forward.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveReconcileTransaction()">Save & Recalculate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular Scripts -->
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/reconcile.js"></script>
+</body>
+</html>

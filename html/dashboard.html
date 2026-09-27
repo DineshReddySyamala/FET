@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finny — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="finny-nav">
+    <div class="nav-left">
+      <div class="brand-logo">
+        <span class="logo-box">FF</span>
+        <div class="brand-text">
+          <span class="brand-name">Finny</span>
+          <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="accounts.html" class="nav-item">Accounts</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="import.html" class="nav-item">Import</a>
+        <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">🌙</button>
+      <div class="user-avatar" title="Dinesh Reddy">DR</div>
+    </div>
+  </header>
+
+  <main class="finny-shell">
+    <div class="page-header">
+      <div class="title-block">
+        <h1>Dashboard</h1>
+        <p>Executive overview of your cash flow and financial health</p>
+      </div>
+    </div>
+    <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:60px 20px; text-align:center; color:var(--text-muted); margin-top:20px;">
+      <h3>📊 Dashboard Module Coming Up</h3>
+      <p style="margin-top:8px; font-size:13px;">KPI widgets, spending heatmaps, and cash flow forecasts will live here.</p>
+    </div>
+  </main>
+
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/common.js"></script>
+</body>
+</html>
