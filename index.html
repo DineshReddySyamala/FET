@@ -1,12 +1,300 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Expense Tracker</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finny — Transactions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Modular Stylesheets -->
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/transactions.css" />
+  
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <h1>Expense Tracker Workshop Ready!</h1>
+
+  <!-- Global Navigation Header -->
+  <header class="finny-nav">
+    <div class="nav-left">
+      <div class="brand-logo">
+        <span class="logo-box">FF</span>
+        <div class="brand-text">
+          <span class="brand-name">Finny</span>
+          <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="#" class="nav-item">Dashboard</a>
+        <a href="#" class="nav-item active">Transactions</a>
+        <a href="#" class="nav-item">Accounts</a>
+        <a href="#" class="nav-item">Plan</a>
+        <a href="#" class="nav-item">Insights</a>
+        <a href="#" class="nav-item">Goals</a>
+        <a href="#" class="nav-item">More</a>
+      </nav>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">🌙</button>
+      <div class="user-avatar" title="Dinesh Reddy">DR</div>
+    </div>
+  </header>
+
+  <!-- Main Shell -->
+  <main class="finny-shell">
+    <section class="page-header">
+      <div class="title-block">
+        <h1>Transactions</h1>
+        <p>Track, manage and make the most of your money</p>
+      </div>
+
+      <div class="header-actions">
+        <div class="date-range-control">
+          <button class="date-nav-btn" id="prevMonthBtn">‹</button>
+          <div class="date-display">
+            <span class="cal-icon">📅</span>
+            <input type="date" id="dateStart" />
+            <span>–</span>
+            <input type="date" id="dateEnd" />
+          </div>
+          <button class="date-nav-btn" id="nextMonthBtn">›</button>
+        </div>
+
+        <button class="btn btn-secondary" id="moreActionsBtn">More Actions ▾</button>
+        <button class="btn btn-primary" id="openAddTxnBtn">+ Add Transaction ▾</button>
+      </div>
+    </section>
+
+    <!-- KPI Row -->
+    <section class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-icon-box info-icon">📋</div>
+        <div class="kpi-info">
+          <span class="kpi-title">Total Transactions</span>
+          <span class="kpi-value" id="kpiTotalCount">0</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-box income-icon">↑</div>
+        <div class="kpi-info">
+          <span class="kpi-title">Income</span>
+          <span class="kpi-value income-val" id="kpiIncomeVal">₹0.00</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-box expense-icon">↓</div>
+        <div class="kpi-info">
+          <span class="kpi-title">Expenses</span>
+          <span class="kpi-value expense-val" id="kpiExpenseVal">₹0.00</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-box transfer-icon">⇆</div>
+        <div class="kpi-info">
+          <span class="kpi-title">Transfers</span>
+          <span class="kpi-value transfer-val" id="kpiTransferVal">₹0.00</span>
+          <span class="kpi-subtext" id="kpiTransferCount">0 transactions</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Workspace Grid -->
+    <section class="workspace-grid">
+      <!-- Left Filters -->
+      <aside class="filter-sidebar">
+        <div class="filter-head">
+          <h3>Filters</h3>
+          <button id="clearFiltersBtn" class="link-btn">Clear All</button>
+        </div>
+
+        <div class="filter-group">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="filterSearch" placeholder="Search transactions, payee..." />
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Accounts</label>
+          <select id="filterAccount" class="select-box">
+            <option value="ALL">All Accounts</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Categories</label>
+          <select id="filterCategory" class="select-box">
+            <option value="ALL">All Categories</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Transaction Type</label>
+          <div class="checkbox-list">
+            <label class="check-item">
+              <input type="checkbox" id="typeAll" checked />
+              <span>All</span>
+              <span class="count-tag" id="typeCountAll">0</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" class="type-check" value="Expense" checked />
+              <span>Expenses</span>
+              <span class="count-tag" id="typeCountExpense">0</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" class="type-check" value="Income" checked />
+              <span>Income</span>
+              <span class="count-tag" id="typeCountIncome">0</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" class="type-check" value="Transfer" checked />
+              <span>Transfers</span>
+              <span class="count-tag" id="typeCountTransfer">0</span>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn btn-outline w-100" id="saveFilterBtn">🔖 Save Filter</button>
+      </aside>
+
+      <!-- Center Table -->
+      <section class="main-workspace">
+        <div class="workspace-toolbar">
+          <div class="view-tabs">
+            <button class="view-tab active">List View</button>
+            <button class="view-tab">Calendar View</button>
+            <button class="view-tab">Account View</button>
+          </div>
+
+          <div class="toolbar-right">
+            <label class="sort-label">Sort by</label>
+            <select id="sortBySelect" class="sort-select">
+              <option value="date_desc">Date (Newest First)</option>
+              <option value="date_asc">Date (Oldest First)</option>
+              <option value="amount_desc">Amount (Highest First)</option>
+              <option value="amount_asc">Amount (Lowest First)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="finny-table">
+            <thead>
+              <tr>
+                <th width="36"><input type="checkbox" id="selectAllRows" /></th>
+                <th width="110">Date</th>
+                <th>Payee / Description</th>
+                <th>Category</th>
+                <th>Account</th>
+                <th class="text-right">Amount</th>
+                <th class="text-right">Running Balance</th>
+                <th width="32"></th>
+              </tr>
+            </thead>
+            <tbody id="transactionTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination-bar">
+          <span class="pagination-info" id="paginationInfo">Showing 0 of 0 transactions</span>
+          <div class="pagination-btns">
+            <button class="page-btn">‹</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">›</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Details Sidebar -->
+      <aside class="details-sidebar" id="detailsSidebar">
+        <div id="detailsEmpty" class="details-empty-state">
+          <p>Select a transaction to view its details</p>
+        </div>
+
+        <div id="detailsActive" class="details-active-state" style="display: none;">
+          <div class="details-header">
+            <div class="details-title-row">
+              <div class="details-avatar" id="detailsAvatar">🍽️</div>
+              <div class="details-headline">
+                <h3 id="detailsPayee">Merchant Name</h3>
+                <span class="details-time" id="detailsDateTime">01 Sep 2026</span>
+              </div>
+              <button class="close-details-btn" id="closeDetailsBtn">✕</button>
+            </div>
+            <div class="details-amount-hero" id="detailsAmount">- ₹0.00</div>
+          </div>
+
+          <div class="details-tabs">
+            <button class="det-tab active">Details</button>
+            <button class="det-tab">History</button>
+          </div>
+
+          <div class="details-fields">
+            <div class="det-row">
+              <span class="det-label">Payee</span>
+              <span class="det-val font-semibold" id="detFieldPayee">—</span>
+            </div>
+            <div class="det-row">
+              <span class="det-label">Category</span>
+              <span class="det-val" id="detFieldCategory">—</span>
+            </div>
+            <div class="det-row">
+              <span class="det-label">Account</span>
+              <span class="det-val" id="detFieldAccount">—</span>
+            </div>
+            <div class="det-row">
+              <span class="det-label">Date & Time</span>
+              <span class="det-val" id="detFieldDateTime">—</span>
+            </div>
+            <div class="det-row">
+              <span class="det-label">Type</span>
+              <span class="det-val"><span class="badge" id="detFieldType">Expense</span></span>
+            </div>
+            <div class="det-row">
+              <span class="det-label">Status</span>
+              <span class="det-val status-indicator" id="detFieldStatus">● Completed</span>
+            </div>
+            <div class="det-row">
+              <span class="det-label">Notes</span>
+              <span class="det-val text-muted" id="detFieldNotes">None</span>
+            </div>
+          </div>
+
+          <div class="details-actions">
+            <button class="btn btn-secondary flex-1">✏️ Edit</button>
+            <button class="btn btn-secondary flex-1">📋 Duplicate</button>
+            <button class="btn btn-danger-outline flex-1">🗑️ Delete</button>
+          </div>
+
+          <div class="account-balance-card">
+            <span class="det-label">Account Balance</span>
+            <h4 id="detAccountName">Kotak Bank</h4>
+            <div class="acc-balance-row">
+              <span class="acc-balance-num">₹1,32,450.00</span>
+              <span class="trend-pill">↑ 8.2%</span>
+            </div>
+          </div>
+
+          <div class="recurring-suggestion-card">
+            <div class="rec-title">💡 Recurring Suggestion</div>
+            <p class="rec-text">You have frequent transactions at this merchant. Create a recurring rule?</p>
+            <a href="#" class="rec-link">Create Rule →</a>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <!-- Modular Scripts -->
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/transactions.js"></script>
 </body>
 </html>
