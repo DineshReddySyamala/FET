@@ -41,3 +41,44 @@ window.initThemeSystem = function() {
 document.addEventListener('DOMContentLoaded', () => {
   window.initThemeSystem();
 });
+
+// ==========================================================================
+// SPA ROUTER: SWITCH BETWEEN TRANSACTIONS, ACCOUNTS, ETC.
+// ==========================================================================
+window.switchPage = function(pageId) {
+  // 1. Hide all page views
+  document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
+
+  // 2. Remove active state from nav items
+  document.querySelectorAll('.nav-item').forEach(link => link.classList.remove('active'));
+
+  // 3. Show targeted page view
+  const targetPage = document.getElementById(pageId);
+  if (targetPage) {
+    targetPage.style.display = 'flex';
+  }
+
+  // 4. Highlight matching nav item
+  const activeLink = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+  if (activeLink) {
+    activeLink.classList.add('active');
+  }
+
+  // 5. Trigger page-specific loads
+  if (pageId === 'pageAccounts' && window.loadAccountsData) {
+    window.loadAccountsData();
+  }
+};
+
+// Listen to top navigation clicks
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-links .nav-item').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetPageId = link.getAttribute('data-page');
+      if (targetPageId && document.getElementById(targetPageId)) {
+        window.switchPage(targetPageId);
+      }
+    });
+  });
+});
