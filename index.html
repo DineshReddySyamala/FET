@@ -29,12 +29,10 @@
       </div>
       <nav class="nav-links">
         <a href="#dashboard" class="nav-item" data-page="pageDashboard">Dashboard</a>
-        <a href="#transactions" class="nav-item active" data-page="pageTransactions">Transactions</a>
         <a href="#accounts" class="nav-item" data-page="pageAccounts">Accounts</a>
-        <a href="#plan" class="nav-item" data-page="pagePlan">Plan</a>
-        <a href="#insights" class="nav-item" data-page="pageInsights">Insights</a>
-        <a href="#goals" class="nav-item" data-page="pageGoals">Goals</a>
-        <a href="#more" class="nav-item" data-page="pageMore">More</a>
+        <a href="#transactions" class="nav-item active" data-page="pageTransactions">Transactions</a>
+        <a href="#import" class="nav-item" data-page="pageImport">Import</a>
+        <a href="#settings" class="nav-item" data-page="pageSettings">Settings</a>
       </nav>
     </div>
     <div class="nav-right">
@@ -509,6 +507,54 @@
           <div id="liabilityCompositionBars" class="alloc-bars-wrap"></div>
         </div>
       </div>
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       PAGE 3: DASHBOARD VIEW (PLACEHOLDER)
+       ========================================================================= -->
+  <main id="pageDashboard" class="finny-shell page-view" style="display: none;">
+    <section class="page-header">
+      <div class="title-block">
+        <h1>Dashboard</h1>
+        <p>Executive overview of your cash flow and financial health</p>
+      </div>
+    </section>
+    <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:60px 20px; text-align:center; color:var(--text-muted);">
+      <h3>📊 Dashboard Module Coming Up</h3>
+      <p style="margin-top:8px; font-size:13px;">KPI widgets, spending burn rates, and cash flow trends will live here.</p>
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       PAGE 4: IMPORT VIEW (PLACEHOLDER)
+       ========================================================================= -->
+  <main id="pageImport" class="finny-shell page-view" style="display: none;">
+    <section class="page-header">
+      <div class="title-block">
+        <h1>Import</h1>
+        <p>Automate bank statement imports, CSV ingestion, and Google Drive syncing</p>
+      </div>
+    </section>
+    <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:60px 20px; text-align:center; color:var(--text-muted);">
+      <h3>📥 Data Import Pipeline</h3>
+      <p style="margin-top:8px; font-size:13px;">Daily automated Google Drive/Excel sync and CSV upload staging will live here.</p>
+    </div>
+  </main>
+
+  <!-- =========================================================================
+       PAGE 5: SETTINGS VIEW (PLACEHOLDER)
+       ========================================================================= -->
+  <main id="pageSettings" class="finny-shell page-view" style="display: none;">
+    <section class="page-header">
+      <div class="title-block">
+        <h1>Settings</h1>
+        <p>Manage accounts, categories, rules, and application preferences</p>
+      </div>
+    </section>
+    <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:60px 20px; text-align:center; color:var(--text-muted);">
+      <h3>⚙️ Finny Preferences & Rules</h3>
+      <p style="margin-top:8px; font-size:13px;">Rule engines, master category management, and backup exports will live here.</p>
     </div>
   </main>
 
