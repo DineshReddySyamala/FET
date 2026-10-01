@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finny — Monthly Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/planner.css" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Finny Navigation Bar -->
+  <header class="finny-nav">
+    <div class="nav-left">
+      <div class="brand-logo">
+        <span class="logo-box">F</span>
+        <div class="brand-text">
+          <span class="brand-name">Finny</span>
+          <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="accounts.html" class="nav-item">Accounts</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="import.html" class="nav-item">Import</a>
+        <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="budget.html" class="nav-item">Budget</a>
+        <a href="loans.html" class="nav-item">Loans</a>
+        <a href="planner.html" class="nav-item">Planner</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon-btn" title="Search">🔍</button>
+      <button class="nav-icon-btn" id="themeToggleBtn" title="Theme">🌙</button>
+      <button class="nav-icon-btn nav-badge-wrap" title="Notifications">
+        🔔
+        <span class="nav-badge-count">2</span>
+      </button>
+      <div class="user-avatar" title="Dinesh Reddy">DS</div>
+    </div>
+  </header>
+
+  <!-- Page Header -->
+  <div class="planner-page-header">
+    <div class="planner-header-top-row">
+      <div class="planner-title-block">
+        <h1>Monthly Planner</h1>
+        <p>Track your income and expenses month by month. See your balance and plan ahead.</p>
+      </div>
+
+      <div class="planner-header-controls">
+        <div class="year-navigator-pill">
+          <button class="year-nav-arrow" onclick="changePlannerYear(-1)" title="Previous Year">‹</button>
+          <span class="year-nav-label" id="plannerYearLabel">2026</span>
+          <button class="year-nav-arrow" onclick="changePlannerYear(1)" title="Next Year">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Master Workspace Shell -->
+  <main class="planner-workspace-shell">
+
+    <!-- Top KPI Cards Row -->
+    <section class="planner-kpi-row">
+      <!-- Total Income -->
+      <div class="planner-kpi-card">
+        <div class="kpi-icon-box bg-tint-green">👛</div>
+        <div class="kpi-info-col">
+          <span class="kpi-lbl" id="lblIncomeYear">Total Income (2026)</span>
+          <h2 class="kpi-value text-green" id="kpiTotalIncome">₹0.00</h2>
+          <span class="kpi-subtext" id="kpiIncomeGrowth">Annual recorded inflow</span>
+        </div>
+      </div>
+
+      <!-- Total Expenses -->
+      <div class="planner-kpi-card">
+        <div class="kpi-icon-box bg-tint-red">↗️</div>
+        <div class="kpi-info-col">
+          <span class="kpi-lbl" id="lblExpenseYear">Total Expenses (2026)</span>
+          <h2 class="kpi-value text-red" id="kpiTotalExpenses">₹0.00</h2>
+          <span class="kpi-subtext" id="kpiExpenseGrowth">Fixed + Variable + Yearly</span>
+        </div>
+      </div>
+
+      <!-- Average Monthly Balance -->
+      <div class="planner-kpi-card">
+        <div class="kpi-icon-box bg-tint-blue">⏱️</div>
+        <div class="kpi-info-col">
+          <span class="kpi-lbl">Average Monthly Balance</span>
+          <h2 class="kpi-value" id="kpiAvgBalance">₹0.00</h2>
+          <span class="kpi-subtext">Net savings per active month</span>
+        </div>
+      </div>
+
+      <!-- Best Month -->
+      <div class="planner-kpi-card">
+        <div class="kpi-icon-box bg-tint-purple">🏆</div>
+        <div class="kpi-info-col">
+          <span class="kpi-lbl">Best Month</span>
+          <h2 class="kpi-value text-purple" id="kpiBestMonthName">—</h2>
+          <span class="kpi-subtext" id="kpiBestMonthAmt">₹0.00 net surplus</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Master 12-Month Matrix Table Card -->
+    <section class="planner-matrix-card">
+      <div class="matrix-table-scroll">
+        <table class="planner-matrix-table" id="plannerMatrixTable">
+          <thead>
+            <tr>
+              <th class="col-sticky-cat">Category / Item</th>
+              <th class="text-right col-month">Jan</th>
+              <th class="text-right col-month">Feb</th>
+              <th class="text-right col-month">Mar</th>
+              <th class="text-right col-month">Apr</th>
+              <th class="text-right col-month">May</th>
+              <th class="text-right col-month">Jun</th>
+              <th class="text-right col-month">Jul</th>
+              <th class="text-right col-month">Aug</th>
+              <th class="text-right col-month">Sep</th>
+              <th class="text-right col-month">Oct</th>
+              <th class="text-right col-month">Nov</th>
+              <th class="text-right col-month">Dec</th>
+              <th class="text-right col-sticky-total">Year Total</th>
+            </tr>
+          </thead>
+          <tbody id="plannerMatrixBody">
+            <tr>
+              <td colspan="14" class="text-center text-muted" style="padding: 40px;">Building matrix projections...</td>
+            </tr>
+          </tbody>
+          <tfoot id="plannerMatrixFoot">
+            <!-- Dynamic Balance of Month Net Pill Row -->
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/planner.js"></script>
+</body>
+</html>

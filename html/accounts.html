@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finny — Accounts & Net Worth</title>
+  <title>Finny — Accounts</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/accounts.css" />
   
@@ -16,11 +15,11 @@
 </head>
 <body>
 
-  <!-- Global Navigation Header -->
+  <!-- Finny Navigation Bar -->
   <header class="finny-nav">
     <div class="nav-left">
       <div class="brand-logo">
-        <span class="logo-box">FF</span>
+        <span class="logo-box">F</span>
         <div class="brand-text">
           <span class="brand-name">Finny</span>
           <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
@@ -32,240 +31,692 @@
         <a href="transactions.html" class="nav-item">Transactions</a>
         <a href="import.html" class="nav-item">Import</a>
         <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="budget.html" class="nav-item">Budget</a>
+        <a href="loans.html" class="nav-item">Loans</a>
+        <a href="planner.html" class="nav-item">Planner</a>
         <a href="settings.html" class="nav-item">Settings</a>
       </nav>
     </div>
     <div class="nav-right">
-      <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">🌙</button>
-      <div class="user-avatar" title="Dinesh Reddy">DR</div>
+      <button class="nav-icon-btn" title="Search">🔍</button>
+      <button class="nav-icon-btn" id="themeToggleBtn" title="Theme">🌙</button>
+      <button class="nav-icon-btn nav-badge-wrap" title="Notifications">
+        🔔
+        <span class="nav-badge-count">2</span>
+      </button>
+      <div class="user-avatar" title="Dinesh Reddy">DS</div>
     </div>
   </header>
 
-  <!-- Accounts View (Visible by default) -->
-  <main class="finny-shell">
-    <section class="page-header">
-      <div class="title-block">
-        <h1>Accounts</h1>
-        <p>Your financial position at a glance</p>
-      </div>
+  <!-- Subheader -->
+  <div class="accounts-page-header">
+    <div class="title-block">
+      <h1>Accounts</h1>
+      <p>Your financial position at a glance</p>
+    </div>
+  </div>
 
-      <div class="header-actions">
-        <div class="date-range-control">
-          <span class="cal-icon">📅</span>
-          <label for="asOfDate" style="font-size:12px; margin-right:4px; color:var(--text-muted);">As of</label>
-          <input type="date" id="asOfDate" />
+  <!-- Main Grid -->
+  <main class="accounts-grid-shell">
+
+    <!-- LEFT SIDEBAR: 3 DYNAMIC CARDS -->
+    <aside class="acc-hierarchy-sidebar">
+
+      <!-- CARD 1: ASSETS -->
+      <div class="h-card-box">
+        <div class="h-section-header" onclick="toggleHierarchySection('assetsDynamicGroups', 'chevAssets')">
+          <div class="h-sec-left">
+            <span class="h-chev" id="chevAssets">▾</span>
+            <span class="h-sec-icon assets-icon">🏛️</span>
+            <span class="h-sec-title">Assets</span>
+          </div>
+          <span class="h-sec-total text-green" id="sidebarAssetsTotal">₹0.00</span>
         </div>
-        <button class="btn btn-secondary">More Actions ▾</button>
-        <button class="btn btn-primary" onclick="window.location.href='settings.html'">+ Add Account</button>
-      </div>
-    </section>
 
-    <!-- Sub-tabs -->
-    <div class="accounts-tabs">
-      <button class="acc-tab active" data-tab="balanceSheet">📑 Balance Sheet</button>
-      <button class="acc-tab" data-tab="accountList">🗂️ Account List</button>
-      <button class="acc-tab" data-tab="trends">📈 Trends</button>
-      <button class="acc-tab" data-tab="allocation">📊 Allocation</button>
+        <div class="h-subgroups-list" id="assetsDynamicGroups">
+          <!-- Populated from Database -->
+        </div>
+      </div>
+
+      <!-- CARD 2: LIABILITIES -->
+      <div class="h-card-box">
+        <div class="h-section-header" onclick="toggleHierarchySection('liabDynamicGroups', 'chevLiab')">
+          <div class="h-sec-left">
+            <span class="h-chev" id="chevLiab">▾</span>
+            <span class="h-sec-icon liab-icon">💳</span>
+            <span class="h-sec-title">Liabilities</span>
+          </div>
+          <span class="h-sec-total text-red" id="sidebarLiabTotal">₹0.00</span>
+        </div>
+
+        <div class="h-subgroups-list" id="liabDynamicGroups">
+          <!-- Populated from Database -->
+        </div>
+      </div>
+
+      <!-- CARD 3: NET WORTH -->
+      <div class="h-card-box h-networth-card-standalone">
+        <div class="nw-icon-square">📊</div>
+        <div class="nw-text-col">
+          <span class="nw-title">Net Worth</span>
+          <span class="nw-amount" id="sidebarNetWorthVal">₹0.00</span>
+          <span class="nw-change-pill">↑ 15.6% from last month</span>
+        </div>
+        <span class="nw-right-arrow">›</span>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT MAIN WORKSPACE -->
+    <section class="acc-main-workspace">
+
+      <!-- TOP ACCOUNT HERO CARD WITH KPI CARDS (Review, Posted, Last Import, Current Balance) -->
+      <div class="account-card-hero">
+        
+        <!-- Left Account Profile -->
+        <div class="hero-acc-info">
+          <div class="hero-logo-circle" id="heroAccLogo">SB</div>
+          <div class="hero-titles">
+            <div class="hero-name-row">
+              <h2 id="heroAccName">Account Name</h2>
+              <button class="hero-edit-btn" title="Edit Account">✎</button>
+            </div>
+            <p class="hero-acc-meta" id="heroAccMeta">Bank Accounts • •••• 1234</p>
+          </div>
+        </div>
+
+        <!-- KPI Mini Cards Row -->
+        <div class="hero-kpi-summary-row">
+
+          <!-- Card 1: Review -->
+          <div class="hero-kpi-pill-card kpi-review">
+            <div class="kpi-icon-square icon-blue">👤</div>
+            <div class="kpi-info-col">
+              <span class="kpi-tag-title text-blue">Review</span>
+              <span class="kpi-sub-count" id="heroKpiReviewCount">0 transactions</span>
+              <span class="kpi-amount-val text-blue" id="heroKpiReviewAmt">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Posted -->
+          <div class="hero-kpi-pill-card kpi-posted">
+            <div class="kpi-icon-square icon-green">✔</div>
+            <div class="kpi-info-col">
+              <span class="kpi-tag-title text-dark-green">Posted</span>
+              <span class="kpi-sub-count" id="heroKpiPostedCount">0 transactions</span>
+              <span class="kpi-amount-val text-green" id="heroKpiPostedAmt">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Last Import -->
+          <div class="hero-kpi-pill-card kpi-last-import">
+            <div class="kpi-icon-square icon-calendar">📅</div>
+            <div class="kpi-info-col">
+              <span class="kpi-tag-title text-navy">Last Import</span>
+              <span class="kpi-sub-date" id="heroKpiLastImportDate">—</span>
+              <span class="kpi-sub-time" id="heroKpiLastImportTime">—</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Current Balance Hero -->
+          <div class="hero-balance-badge">
+            <span class="hero-bal-label">Current Balance</span>
+            <div class="hero-bal-val" id="heroCurrentBalance">₹0.00</div>
+            <span class="hero-bal-date" id="heroAsOfDate">As of today</span>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- TAB SELECTION BAR -->
+      <div class="acc-tabs-nav">
+        <button class="acc-tab-item active" onclick="switchAccountTab('Transactions', this)">Transactions</button>
+        <button class="acc-tab-item" onclick="switchAccountTab('Import', this)">Import</button>
+        <button class="acc-tab-item" onclick="switchAccountTab('Reconciliation', this)">Reconciliation</button>
+      </div>
+<!-- TAB CONTENT CONTAINER -->
+<div class="acc-tab-container">
+
+  <!-- TAB 1: TRANSACTIONS (WITH SPLIT VIEW & DOCKED INSPECTOR) -->
+  <div class="tab-view-content active" id="tabViewTransactions">
+    
+    <!-- Filters Bar -->
+    <div class="acc-tab-controls-row">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="accTxnSearch" class="panel-input" placeholder="Search transactions (payee, description, amount...)" />
+      </div>
+
+      <div class="acc-filters-group">
+        <select id="accFilterDate" class="panel-select">
+          <option value="this_month">This Month</option>
+          <option value="last_month">Last Month</option>
+          <option value="last_3_months">Last 3 Months</option>
+          <option value="last_6_months" selected>Last 6 Months</option>
+          <option value="this_year">This Year</option>
+          <option value="last_year">Last Year</option>
+          <option value="ALL">All Dates</option>
+        </select>
+
+        <select id="accFilterCategory" class="panel-select">
+          <option value="ALL">All Categories</option>
+        </select>
+
+        <select id="accFilterType" class="panel-select">
+          <option value="ALL">All Types</option>
+          <option value="Expense">Expenses</option>
+          <option value="Income">Income</option>
+          <option value="Transfer">Transfers</option>
+        </select>
+
+        <button type="button" class="btn-toggle-all-months" id="btnToggleAllMonths" onclick="toggleAllTransactionMonths()">
+          <span>⤢</span> Expand All
+        </button>
+
+        <button class="btn btn-primary" onclick="openNewTransactionDrawer()">
+          <span>+</span> Add Transaction
+        </button>
+      </div>
     </div>
 
-    <!-- 4 KPI Cards -->
-    <section class="kpi-row">
-      <div class="kpi-card">
-        <div class="kpi-icon-box income-icon">🏛️</div>
-        <div class="kpi-info">
-          <span class="kpi-title">Total Assets</span>
-          <span class="kpi-value income-val" id="kpiTotalAssets">₹0.00</span>
-          <span class="kpi-subtext" style="color:var(--finny-income);">↑ Positive balances</span>
-        </div>
-      </div>
+    <!-- 2-Column Split: Table + Docked Inspector Card -->
+    <div class="acc-split-layout">
+            
+            <!-- Left Column: Transactions Stream Table -->
+            <div class="acc-ledger-table-container">
+              <table class="finny-table acc-ledger-table">
+                <thead>
+                  <tr>
+                    <th width="32"><input type="checkbox" id="selectAllTxns" /></th>
+                    <th width="65">Time</th>
+                    <th>Description</th>
+                    <th>Payee</th>
+                    <th>Category</th>
+                    <th class="text-right">Amount (₹)</th>
+                    <th class="text-center">Type</th>
+                    <th class="text-right">Balance (₹)</th>
+                    <th width="40" class="text-right"></th>
+                  </tr>
+                </thead>
+                <tbody id="accLedgerBody">
+                  <tr>
+                    <td colspan="9" class="text-center text-muted" style="padding: 40px;">Loading transactions...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon-box expense-icon">💳</div>
-        <div class="kpi-info">
-          <span class="kpi-title">Total Liabilities</span>
-          <span class="kpi-value expense-val" id="kpiTotalLiabilities">₹0.00</span>
-          <span class="kpi-subtext" style="color:var(--finny-expense);">↑ Debts & credit</span>
-        </div>
-      </div>
+            <!-- Right Column: Docked Transaction Inspector Card -->
+            <aside class="acc-inspector-card" id="txnTabInspectorCard">
+              
+              <!-- MODE 1: READ-ONLY TRANSACTION INFO -->
+              <div id="txnTabViewState" style="display: none;">
+                <div class="inspector-header">
+                  <div class="inspector-header-left">
+                    <span class="inspector-avatar">📄</span>
+                    <div>
+                      <h3 id="txnViewTitle">Transaction Details</h3>
+                      <p class="text-muted" id="txnViewDateTime" style="font-size: 11px;">Select a transaction</p>
+                    </div>
+                  </div>
+                  <button class="btn-close-sm" onclick="clearSelectedTxnTabItem()">✕</button>
+                </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon-box info-icon">⚖️</div>
-        <div class="kpi-info">
-          <span class="kpi-title">Net Worth</span>
-          <span class="kpi-value" id="kpiNetWorth">₹0.00</span>
-          <span class="kpi-subtext" id="kpiNetWorthSubtext">Assets − Liabilities</span>
-        </div>
-      </div>
+                <div class="inspector-view-body">
+                  <div class="view-hero-amount-box">
+                    <span class="text-muted" style="font-size: 11px; text-transform: uppercase;">Amount</span>
+                    <h2 id="txnViewAmount" class="view-hero-amount">₹0.00</h2>
+                    <span id="txnViewTypeBadge" class="type-pill-box">Expense</span>
+                  </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon-box transfer-icon">📊</div>
-        <div class="kpi-info">
-          <span class="kpi-title">Total Accounts</span>
-          <span class="kpi-value" id="kpiAccountCount">0</span>
-          <span class="kpi-subtext" id="kpiAccountActiveSummary">0 active • 0 archived</span>
-        </div>
-      </div>
-    </section>
+                  <div class="view-details-list">
+                    <div class="view-detail-row">
+                      <span class="lbl">Account</span>
+                      <strong id="txnViewAccount">—</strong>
+                    </div>
+                    <div class="view-detail-row">
+                      <span class="lbl">Category</span>
+                      <strong id="txnViewCategory">—</strong>
+                    </div>
+                    <div class="view-detail-row">
+                      <span class="lbl">Balance After</span>
+                      <strong id="txnViewBalanceAfter" class="text-navy">₹0.00</strong>
+                    </div>
+                    <div class="view-detail-row column">
+                      <span class="lbl">Notes / Remarks</span>
+                      <p id="txnViewNotes" class="view-notes-text">No notes provided</p>
+                    </div>
+                  </div>
 
-    <!-- Sub-Tab 1: Balance Sheet -->
-    <div id="tabBalanceSheet" class="tab-pane active">
-      <div class="balance-sheet-grid">
-        <!-- Assets Card -->
-        <div class="bs-card assets-card">
-          <div class="bs-card-head">
-            <div class="bs-title-wrap">
-              <span class="bs-badge-icon asset-badge">🏛️</span>
-              <div>
-                <h2>Assets</h2>
-                <span class="bs-subtitle">What you own</span>
+                  <div class="inspector-actions-row">
+                    <button class="btn btn-secondary flex-1" id="btnEditTxnTab">✏️ Edit</button>
+                    <button class="btn btn-danger-outline" id="btnDeleteTxnTab">🗑️ Delete</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- MODE 2: INTERACTIVE ADD / EDIT FORM -->
+              <div id="txnTabFormState">
+                <div class="inspector-header">
+                  <div class="inspector-header-left">
+                    <span class="inspector-avatar">✍️</span>
+                    <div>
+                      <h3 id="txnFormHeaderTitle">New Transaction</h3>
+                      <p class="text-muted" id="txnFormHeaderSubtitle" style="font-size: 11px;">Enter transaction details</p>
+                    </div>
+                  </div>
+                  <button class="btn-close-sm" onclick="clearSelectedTxnTabItem()">✕</button>
+                </div>
+
+                <form id="txnTabEntryForm" onsubmit="handleTxnTabSave(event)">
+                  <input type="hidden" id="txnTabFormId" />
+                  <input type="hidden" id="txnTabTransferPairId" />
+
+                  <!-- Type Switcher -->
+                  <div class="type-pill-switcher">
+                    <button type="button" class="type-pill-btn active" data-type="Expense" onclick="setTxnTabType('Expense')">Expense</button>
+                    <button type="button" class="type-pill-btn" data-type="Income" onclick="setTxnTabType('Income')">Income</button>
+                    <button type="button" class="type-pill-btn" data-type="Transfer" onclick="setTxnTabType('Transfer')">Transfer</button>
+                  </div>
+
+                  <!-- Amount -->
+                  <div class="budget-form-field">
+                    <label>AMOUNT (₹) *</label>
+                    <input type="number" step="0.01" id="txnTabAmount" class="panel-input hero-budget-field" placeholder="0.00" required oninput="recalcTxnTabBalancePreview()" />
+                  </div>
+
+                  <!-- Account -->
+                  <div class="budget-form-field" id="txnTabGroupSingleAccount">
+                    <label>ACCOUNT *</label>
+                    <select id="txnTabAccountId" class="panel-select"></select>
+                  </div>
+
+                  <!-- Transfer Accounts -->
+                  <div id="txnTabGroupTransferAccounts" style="display: none; flex-direction: column; gap: 8px;">
+                    <div class="budget-form-field">
+                      <label>FROM ACCOUNT *</label>
+                      <select id="txnTabFromAccountId" class="panel-select"></select>
+                    </div>
+                    <div class="budget-form-field">
+                      <label>TO ACCOUNT *</label>
+                      <select id="txnTabToAccountId" class="panel-select"></select>
+                    </div>
+                  </div>
+
+                  <!-- Category -->
+                  <div class="budget-form-field" id="txnTabGroupCategory">
+                    <label>CATEGORY</label>
+                    <select id="txnTabCategoryId" class="panel-select">
+                      <option value="">(No Category)</option>
+                    </select>
+                  </div>
+
+                  <!-- Payee / Description -->
+                  <div class="budget-form-field">
+                    <label>PAYEE / DESCRIPTION *</label>
+                    <input type="text" id="txnTabPayee" class="panel-input" placeholder="e.g. Swiggy, Amazon, Salary" required />
+                  </div>
+
+                  <!-- Date & Time -->
+                  <div class="form-grid-2">
+                    <div class="budget-form-field">
+                      <label>DATE *</label>
+                      <input type="date" id="txnTabDate" class="panel-input" required />
+                    </div>
+                    <div class="budget-form-field">
+                      <label>TIME</label>
+                      <input type="time" step="1" id="txnTabTime" class="panel-input" />
+                    </div>
+                  </div>
+
+                  <!-- Notes -->
+                  <div class="budget-form-field">
+                    <label>NOTES / REMARKS</label>
+                    <textarea id="txnTabNotes" class="panel-textarea" rows="2" placeholder="Optional notes..."></textarea>
+                  </div>
+
+                  <!-- Balance Preview Box -->
+                  <div class="balance-preview-box">
+                    <span class="text-muted" style="font-size: 11px;">Balance after this transaction</span>
+                    <strong id="txnTabBalancePreview" class="text-navy font-bold">₹0.00</strong>
+                  </div>
+
+                  <div class="inspector-actions-row">
+                    <button type="button" class="btn btn-secondary" onclick="clearSelectedTxnTabItem()">Cancel</button>
+                    <button type="submit" class="btn btn-primary flex-1" id="btnTxnTabSave">Save Transaction</button>
+                  </div>
+                </form>
+              </div>
+
+            </aside>
+
+          </div>
+
+        </div>
+
+<!-- TAB 2: IMPORT MERGED TIMELINE VIEW -->
+        <div id="tabViewImport" class="tab-view-content">
+
+          <div class="acc-filter-bar">
+            <div class="filter-search-wrap">
+              <span class="search-glass">🔍</span>
+              <input type="text" id="accImportSearch" placeholder="Search transactions..." />
+            </div>
+
+            <div class="filter-dropdowns">
+              <select id="accImportFilterDate" class="acc-select">
+                <option value="ALL" selected>📅 All Dates</option>
+                <option value="this_month">📅 This Month</option>
+                <option value="last_month">📅 Last Month</option>
+                <option value="last_3_months">📅 Last 3 Months</option>
+                <option value="this_year">📅 This Year</option>
+              </select>
+
+              <select id="accImportFilterCategory" class="acc-select">
+                <option value="ALL">All Categories</option>
+              </select>
+
+              <select id="accImportFilterType" class="acc-select">
+                <option value="ALL">All Types</option>
+                <option value="Expense">Expense</option>
+                <option value="Income">Income</option>
+                <option value="Transfer">Transfer</option>
+              </select>
+
+              <button type="button" class="btn-toggle-all-months" id="btnToggleAllImportMonths" onclick="toggleAllImportMonths()">
+                <span>⤢</span> Expand All
+              </button>
+
+              <button class="btn-filter-icon">
+                <span style="font-size:13px;">⚙</span> Filter
+              </button>
+            </div>
+          </div>
+
+          <!-- 2-COLUMN SPLIT WORKSPACE: TABLE (LEFT) & PERMANENT DOCKED INSPECTOR (RIGHT) -->
+          <div class="import-split-workspace">
+            
+            <!-- LEFT: MERGED LEDGER TABLE -->
+            <div class="acc-table-card import-table-card">
+              <table class="acc-ledger-table acc-import-table">
+                <thead>
+                  <tr>
+                    <th width="130">Date & Time ▾</th>
+                    <th>Description / Remarks</th>
+                    <th class="text-right" width="120">Amount (₹)</th>
+                    <th class="text-center" width="85">Type</th>
+                    <th>Category</th>
+                    <th width="95">Status</th>
+                    <th class="text-right" width="125">Balance After</th>
+                    <th width="115" class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="accImportLedgerBody"></tbody>
+              </table>
+            </div>
+
+            <!-- RIGHT: DOCKED INSPECTOR (VIEW CARD + EDIT FORM) -->
+            <aside class="import-inspector-card" id="importInspectorCard">
+
+<!-- STATE 1: READ-ONLY VIEW CARD (Shown when clicking a Posted transaction) -->
+              <div id="inspectorViewState" style="display: none;">
+                <div class="details-header">
+                  <div class="details-title-row">
+                    <div class="details-avatar form-avatar" id="viewAvatarIcon">🏛️</div>
+                    <div class="details-headline">
+                      <h3 id="viewTitle">Transaction Details</h3>
+                      <span class="details-time" id="viewDateTime">—</span>
+                    </div>
+                    <button type="button" class="close-details-btn" onclick="clearSelectedImportItem()">✕</button>
+                  </div>
+                </div>
+
+                <div class="view-hero-amount-box">
+                  <span class="view-amount-val" id="viewAmount">₹0.00</span>
+                  <span class="type-pill-box" id="viewTypeBadge">Expense</span>
+                </div>
+
+                <!-- DYNAMIC METADATA LIST (Auto-hydrated by renderRichInspectorBody) -->
+                <div id="viewDynamicContainer" class="view-details-list">
+                  <!-- Fallback placeholders before selection -->
+                  <div class="view-detail-row">
+                    <span class="view-meta-label">Account</span>
+                    <span class="view-meta-value font-semibold" id="viewAccount">—</span>
+                  </div>
+                  <div class="view-detail-row" id="viewCategoryRow">
+                    <span class="view-meta-label">Category</span>
+                    <span class="view-meta-value" id="viewCategory">—</span>
+                  </div>
+                  <div class="view-detail-row">
+                    <span class="view-meta-label">Status</span>
+                    <span class="view-meta-value"><span class="already-rec-pill" id="viewStatusPill">Posted</span></span>
+                  </div>
+                  <div class="view-detail-row">
+                    <span class="view-meta-label">Balance After</span>
+                    <span class="view-meta-value font-semibold" id="viewBalanceAfter">₹0.00</span>
+                  </div>
+                  <div class="view-detail-row column" id="viewNotesRow">
+                    <span class="view-meta-label">Remarks / Notes</span>
+                    <p class="view-notes-text" id="viewNotes">—</p>
+                  </div>
+                </div>
+
+                <div class="panel-form-actions" style="margin-top: 20px;">
+                  <button type="button" class="btn btn-outline flex-1" id="btnEditViewedTxn">✏️ Edit</button>
+                  <button type="button" class="stage-icon-btn delete-btn" id="btnDeleteViewedTxn" title="Delete" style="width: 38px; height: 38px; font-size: 15px;">🗑️</button>
+                </div>
+              </div>
+
+              <!-- STATE 2: EDIT / REVIEW FORM -->
+              <div id="inspectorFormState">
+                <div class="details-header">
+                  <div class="details-title-row">
+                    <div class="details-avatar form-avatar" id="formAvatarIcon">✍️</div>
+                    <div class="details-headline">
+                      <h3 id="panelFormTitle">Review Transaction</h3>
+                      <span class="details-time" id="panelFormSubtitle">Adjust details before approving</span>
+                    </div>
+                    <button type="button" class="close-details-btn" onclick="clearSelectedImportItem()">✕</button>
+                  </div>
+                </div>
+
+                <form id="panelTxnForm" onsubmit="handleAccountImportSave(event)">
+                  <input type="hidden" id="panelTxnId" value="" />
+                  <input type="hidden" id="panelTransferPairId" value="" />
+                  <input type="hidden" id="panelIsStaged" value="false" />
+
+                  <!-- Segmented Pill Switcher -->
+                  <div class="panel-type-switcher">
+                    <button type="button" class="type-pill-btn active" data-type="Expense" onclick="setPanelTxnType('Expense')">Expense</button>
+                    <button type="button" class="type-pill-btn" data-type="Income" onclick="setPanelTxnType('Income')">Income</button>
+                    <button type="button" class="type-pill-btn" data-type="Transfer" onclick="setPanelTxnType('Transfer')">Transfer</button>
+                  </div>
+
+                  <!-- Amount Field -->
+                  <div class="form-input-group">
+                    <label class="panel-label">AMOUNT (₹) *</label>
+                    <input type="number" step="0.01" min="0.01" id="panelAmount" class="panel-input hero-amount-field type-expense" placeholder="0.00" required oninput="recalcAccountBalancePreview()" />
+                  </div>
+
+                  <!-- Single Account Mode -->
+                  <div class="form-input-group" id="panelGroupSingleAccount">
+                    <label class="panel-label">ACCOUNT *</label>
+                    <select id="panelAccountId" class="panel-select"></select>
+                  </div>
+
+                  <!-- Category -->
+                  <div class="form-input-group" id="panelGroupCategory">
+                    <label class="panel-label">CATEGORY</label>
+                    <select id="panelCategoryId" class="panel-select"></select>
+                  </div>
+
+                  <!-- Transfer Accounts Mode -->
+                  <div id="panelGroupTransferAccounts" style="display: none; flex-direction: column; gap: 10px;">
+                    <div class="form-input-group">
+                      <label class="panel-label">FROM ACCOUNT (DEBIT) *</label>
+                      <select id="panelFromAccountId" class="panel-select"></select>
+                    </div>
+                    <div class="form-input-group">
+                      <label class="panel-label">TO ACCOUNT (CREDIT) *</label>
+                      <select id="panelToAccountId" class="panel-select"></select>
+                    </div>
+                  </div>
+
+                  <!-- Payee / Description -->
+                  <div class="form-input-group">
+                    <label class="panel-label">PAYEE / DESCRIPTION *</label>
+                    <input type="text" id="panelTitle" class="panel-input" placeholder="e.g. Grocery, Salary, House Rent" required />
+                  </div>
+
+                  <!-- Date & Time Row -->
+                  <div class="panel-grid-2">
+                    <div class="form-input-group">
+                      <label class="panel-label">DATE *</label>
+                      <input type="date" id="panelDate" class="panel-input" required />
+                    </div>
+                    <div class="form-input-group">
+                      <label class="panel-label">TIME</label>
+                      <input type="time" step="1" id="panelTime" class="panel-input" />
+                    </div>
+                  </div>
+
+                  <!-- Notes -->
+                  <div class="form-input-group">
+                    <label class="panel-label">NOTES</label>
+                    <textarea id="panelNotes" class="panel-textarea" rows="2" placeholder="Optional notes..."></textarea>
+                  </div>
+
+                  <!-- Balance After Preview -->
+                  <div class="acc-balance-preview-box">
+                    <span class="preview-lbl">Balance after this transaction</span>
+                    <span class="preview-val" id="panelBalancePreview">₹0.00</span>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="panel-form-actions">
+                    <button type="button" class="btn btn-secondary flex-1" onclick="clearSelectedImportItem()">Cancel</button>
+                    <button type="submit" id="panelBtnSave" class="btn btn-primary flex-1">Approve & Post</button>
+                  </div>
+
+                </form>
+              </div>
+
+            </aside>
+
+          </div>
+
+        </div>
+
+<!-- TAB 3: RECONCILIATION VIEW -->
+        <div id="tabViewReconciliation" class="tab-view-content">
+
+          <!-- 1. TOP CARD: YEARLY RECONCILIATION (ALWAYS VISIBLE) -->
+          <div class="recon-card-shell recon-yearly-card">
+            <div class="recon-card-head">
+              <div class="recon-head-icon-box">📊</div>
+              <div class="recon-head-text">
+                <h3>Yearly Reconciliation</h3>
+                <p>Review balance at the end of each year. Click any year to inspect its monthly breakdown below.</p>
               </div>
             </div>
-            <div class="bs-total-val income-val" id="bsAssetsTotal">₹0.00</div>
+
+            <div class="recon-table-scroll-wrap yearly-scroll">
+              <table class="recon-table">
+                <thead>
+                  <tr>
+                    <th width="100">Year</th>
+                    <th class="text-right">Opening Balance (₹)</th>
+                    <th class="text-right">Total Credits (₹)</th>
+                    <th class="text-right">Total Debits (₹)</th>
+                    <th class="text-right">Closing Balance (₹)</th>
+                    <th class="text-center" width="110">Transactions</th>
+                    <th width="100" class="text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="reconYearlyBody"></tbody>
+              </table>
+            </div>
           </div>
 
-          <table class="bs-table">
-            <thead>
-              <tr>
-                <th>Account Group</th>
-                <th class="text-center">Accounts</th>
-                <th class="text-right">Balance (₹)</th>
-                <th class="text-right">% of Assets</th>
-              </tr>
-            </thead>
-            <tbody id="assetGroupsBody"></tbody>
-            <tfoot>
-              <tr class="bs-tfoot-row asset-footer">
-                <td>Total Assets</td>
-                <td class="text-center" id="assetTotalCount">0</td>
-                <td class="text-right" id="assetTotalFootVal">₹0.00</td>
-                <td class="text-right">100%</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+          <!-- 2. BOTTOM SPLIT: MONTHLY (LEFT) & DAILY STREAM (RIGHT) -->
+          <div class="recon-split-row">
 
-        <!-- Liabilities Card -->
-        <div class="bs-card liabilities-card">
-          <div class="bs-card-head">
-            <div class="bs-title-wrap">
-              <span class="bs-badge-icon liability-badge">💳</span>
-              <div>
-                <h2>Liabilities</h2>
-                <span class="bs-subtitle">What you owe</span>
+            <!-- Monthly Reconciliation Card -->
+            <div class="recon-card-shell flex-1 recon-sub-card">
+              <div class="recon-card-head">
+                <div class="recon-head-icon-box calendar-blue">📅</div>
+                <div class="recon-head-text">
+                  <h3 id="reconMonthlyHeader">Monthly Reconciliation — 2026</h3>
+                  <p>Click a month to view its daily stream.</p>
+                </div>
+              </div>
+
+              <div class="recon-table-scroll-wrap sub-table-scroll">
+                <table class="recon-table monthly-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 110px; min-width: 110px;">Month</th>
+                      <th class="text-right">Opening (₹)</th>
+                      <th class="text-right">Credits (₹)</th>
+                      <th class="text-right">Debits (₹)</th>
+                      <th class="text-right">Closing (₹)</th>
+                      <th class="text-center" width="60">Txns</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reconMonthlyBody"></tbody>
+                </table>
               </div>
             </div>
-            <div class="bs-total-val expense-val" id="bsLiabilitiesTotal">₹0.00</div>
-          </div>
 
-          <table class="bs-table">
-            <thead>
-              <tr>
-                <th>Account Group</th>
-                <th class="text-center">Accounts</th>
-                <th class="text-right">Outstanding (₹)</th>
-                <th class="text-right">% of Liabilities</th>
-              </tr>
-            </thead>
-            <tbody id="liabilityGroupsBody"></tbody>
-            <tfoot>
-              <tr class="bs-tfoot-row liability-footer">
-                <td>Total Liabilities</td>
-                <td class="text-center" id="liabilityTotalCount">0</td>
-                <td class="text-right" id="liabilityTotalFootVal">₹0.00</td>
-                <td class="text-right">100%</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+            <!-- Daily Transactions Card -->
+            <div class="recon-card-shell flex-1 recon-sub-card">
+              <div class="recon-card-head">
+                <div class="recon-head-icon-box calendar-blue">📅</div>
+                <div class="recon-head-text">
+                  <h3 id="reconDailyHeader">Daily Transactions — May 2026</h3>
+                  <p>Day-wise breakdown with running balance.</p>
+                </div>
+              </div>
 
-        <!-- Net Worth & Donut Panel -->
-        <div class="bs-side-panel">
-          <div class="nw-summary-card">
-            <div class="nw-head">
-              <span class="det-label">Net Worth ⓘ</span>
-              <h2 id="sideNetWorthVal">₹0.00</h2>
-              <span class="trend-pill">↑ Healthy Position</span>
+              <!-- Month Summary KPI Ribbon -->
+              <div class="recon-month-kpi-banner">
+                <div class="recon-kpi-item">
+                  <span class="kpi-lbl">Opening:</span>
+                  <span id="rdKpiOpening" class="kpi-num font-bold">₹0.00</span>
+                </div>
+                <div class="recon-kpi-item">
+                  <span class="kpi-lbl">Credits:</span>
+                  <span id="rdKpiCredits" class="kpi-num font-bold text-green">+₹0.00</span>
+                </div>
+                <div class="recon-kpi-item">
+                  <span class="kpi-lbl">Debits:</span>
+                  <span id="rdKpiDebits" class="kpi-num font-bold text-red">-₹0.00</span>
+                </div>
+                <div class="recon-kpi-item">
+                  <span class="kpi-lbl">Closing:</span>
+                  <span id="rdKpiClosing" class="kpi-num font-bold text-blue">₹0.00</span>
+                </div>
+              </div>
+
+              <!-- Daily Stream Container -->
+              <div class="recon-daily-stream-container" id="reconDailyStream"></div>
             </div>
-            <div class="nw-chart-box">
-              <svg viewBox="0 0 300 80" class="sparkline-svg">
-                <path d="M 0,65 Q 60,60 120,40 T 240,25 T 300,10" fill="none" stroke="var(--finny-income)" stroke-width="3" />
-                <circle cx="300" cy="10" r="4" fill="var(--finny-income)" />
-              </svg>
-            </div>
+
           </div>
 
-          <div class="allocation-donut-card">
-            <h4>Asset Allocation</h4>
-            <div id="donutLegend" class="donut-legend-list"></div>
-          </div>
-
-          <div class="insights-summary-card">
-            <h4>💡 Key Insights ⓘ</h4>
-            <ul class="insights-list" id="insightsList"></ul>
-            <a href="#" class="rec-link">View Detailed Insights →</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Sub-Tab 2: Account List -->
-    <div id="tabAccountList" class="tab-pane">
-      <div class="account-list-container">
-        <div class="account-list-toolbar">
-          <input type="text" id="accSearchInput" placeholder="Search accounts, institution..." class="select-box" style="min-width:240px;" />
-          <select id="accGroupFilter" class="select-box">
-            <option value="ALL">All Groups</option>
-          </select>
-          <select id="accStatusFilter" class="select-box">
-            <option value="ACTIVE">Active Only</option>
-            <option value="ALL">All Statuses</option>
-          </select>
         </div>
 
-        <table class="finny-table">
-          <thead>
-            <tr>
-              <th>Account Name</th>
-              <th>Group</th>
-              <th>Institution</th>
-              <th>Classification</th>
-              <th class="text-right">Calculated Balance</th>
-              <th>Status</th>
-              <th width="32"></th>
-            </tr>
-          </thead>
-          <tbody id="allAccountsTableBody"></tbody>
-        </table>
       </div>
-    </div>
 
-    <!-- Sub-Tab 3: Trends -->
-    <div id="tabTrends" class="tab-pane">
-      <div class="account-list-container">
-        <h3>Net Worth & Growth History</h3>
-        <p class="text-muted" style="margin-top:6px; margin-bottom: 20px;">Monthly aggregation derived from historical transaction ledger.</p>
-        <div id="monthlyTrendsList"></div>
-      </div>
-    </div>
+    </section>
 
-    <!-- Sub-Tab 4: Allocation -->
-    <div id="tabAllocation" class="tab-pane">
-      <div class="allocation-full-view">
-        <div class="alloc-col">
-          <h3>Asset Composition</h3>
-          <div id="assetCompositionBars" class="alloc-bars-wrap"></div>
-        </div>
-        <div class="alloc-col">
-          <h3>Liability Composition</h3>
-          <div id="liabilityCompositionBars" class="alloc-bars-wrap"></div>
-        </div>
-      </div>
-    </div>
   </main>
 
   <!-- Modular Scripts -->
   <script src="../js/supabaseClient.js"></script>
   <script src="../js/common.js"></script>
-  <script src="../js/accounts.js"></script>
+  <script src="../js/transactionModal.js?v=4.0"></script>
+  <script src="../js/accounts.js?v=4.0"></script>
 </body>
 </html>

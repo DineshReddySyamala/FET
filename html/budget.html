@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finny — Budget</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/budget.css" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Finny Navigation Bar -->
+  <header class="finny-nav">
+    <div class="nav-left">
+      <div class="brand-logo">
+        <span class="logo-box">F</span>
+        <div class="brand-text">
+          <span class="brand-name">Finny</span>
+          <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
+        </div>
+      </div>
+       <nav class="nav-links">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="accounts.html" class="nav-item">Accounts</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="import.html" class="nav-item">Import</a>
+        <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="budget.html" class="nav-item">Budget</a>
+        <a href="loans.html" class="nav-item">Loans</a>
+        <a href="planner.html" class="nav-item">Planner</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon-btn" title="Search">🔍</button>
+      <button class="nav-icon-btn" id="themeToggleBtn" title="Theme">🌙</button>
+      <button class="nav-icon-btn nav-badge-wrap" title="Notifications">
+        🔔
+        <span class="nav-badge-count">2</span>
+      </button>
+      <div class="user-avatar" title="Dinesh Reddy">DS</div>
+    </div>
+  </header>
+
+  <!-- Page Header Row -->
+  <div class="budget-page-header">
+    <div class="budget-header-top-row">
+      <div class="budget-title-block">
+        <h1>Budget</h1>
+        <p>Plan your spending, stay in control.</p>
+      </div>
+
+      <div class="budget-header-controls">
+        <!-- Month Navigator -->
+        <div class="month-navigator-pill">
+          <button class="month-nav-arrow" onclick="changeBudgetMonth(-1)" title="Previous Month">‹</button>
+          <span class="month-nav-label" id="currentBudgetMonthLabel">Oct 2026</span>
+          <button class="month-nav-arrow" onclick="changeBudgetMonth(1)" title="Next Month">›</button>
+        </div>
+
+        <button class="btn btn-primary" onclick="focusBudgetEditor()">
+          <span>✎</span> Edit Budget
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Viewport Grid Shell -->
+  <main class="budget-workspace-shell">
+
+    <!-- Top KPI Cards Row -->
+    <section class="budget-kpi-row">
+      <!-- KPI 1: Total Budget -->
+      <div class="kpi-card">
+        <div class="kpi-icon-box bg-tint-green">👛</div>
+        <div class="kpi-text-col">
+          <span class="kpi-subtitle">Total Budget</span>
+          <h2 class="kpi-val" id="kpiTotalBudget">₹0.00</h2>
+        </div>
+      </div>
+
+      <!-- KPI 2: Total Spent -->
+      <div class="kpi-card">
+        <div class="kpi-icon-box bg-tint-blue">💳</div>
+        <div class="kpi-text-col">
+          <span class="kpi-subtitle">Total Spent</span>
+          <h2 class="kpi-val" id="kpiTotalSpent">₹0.00</h2>
+          <div class="progress-bar-wrap">
+            <div class="progress-fill bg-blue" id="kpiSpentProgress" style="width: 0%;"></div>
+          </div>
+          <span class="kpi-subtext" id="kpiSpentPercent">0% of budget</span>
+        </div>
+      </div>
+
+      <!-- KPI 3: Remaining -->
+      <div class="kpi-card">
+        <div class="kpi-icon-box bg-tint-emerald">⏱️</div>
+        <div class="kpi-text-col">
+          <span class="kpi-subtitle">Remaining</span>
+          <h2 class="kpi-val text-green" id="kpiRemaining">₹0.00</h2>
+          <div class="progress-bar-wrap">
+            <div class="progress-fill bg-green" id="kpiRemainingProgress" style="width: 100%;"></div>
+          </div>
+          <span class="kpi-subtext" id="kpiRemainingPercent">100% left</span>
+        </div>
+      </div>
+
+      <!-- KPI 4: Days Left -->
+      <div class="kpi-card">
+        <div class="kpi-icon-box bg-tint-red">📅</div>
+        <div class="kpi-text-col">
+          <span class="kpi-subtitle">Days Left</span>
+          <h2 class="kpi-val" id="kpiDaysLeft">0 days</h2>
+          <span class="kpi-subtext" id="kpiMonthElapsed">0 of 30 days elapsed</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Center 3-Column Split Workspace -->
+    <div class="budget-main-split">
+
+      <!-- COLUMN 1: 3-LEVEL BUCKET TREE -->
+      <aside class="budget-buckets-sidebar">
+        <div class="bucket-sidebar-header">
+          <h3>Budget Categories</h3>
+          <button class="add-cat-btn" onclick="openAddCategoryModal()">+ Add Category</button>
+        </div>
+
+        <div class="bucket-groups-container">
+          <!-- BUCKET 1: THINGS I NEED -->
+          <div class="bucket-card" id="bucketCardNeeds">
+            <div class="bucket-card-header" onclick="toggleBucketCollapse('Needs')">
+              <div class="bucket-header-left">
+                <span class="bucket-icon">🏠</span>
+                <span class="bucket-name">Things I Need</span>
+              </div>
+              <div class="bucket-header-right">
+                <span class="bucket-budget" id="bucketTotalNeeds">₹0.00</span>
+                <span class="bucket-percent-pill" id="bucketPercentNeeds">0%</span>
+                <span class="bucket-arrow" id="arrowNeeds">▾</span>
+              </div>
+            </div>
+            <div class="bucket-categories-list" id="bucketListNeeds"></div>
+          </div>
+
+          <!-- BUCKET 2: THINGS I WANT -->
+          <div class="bucket-card" id="bucketCardWants">
+            <div class="bucket-card-header" onclick="toggleBucketCollapse('Wants')">
+              <div class="bucket-header-left">
+                <span class="bucket-icon">🛍️</span>
+                <span class="bucket-name">Things I Want</span>
+              </div>
+              <div class="bucket-header-right">
+                <span class="bucket-budget" id="bucketTotalWants">₹0.00</span>
+                <span class="bucket-percent-pill" id="bucketPercentWants">0%</span>
+                <span class="bucket-arrow" id="arrowWants">▾</span>
+              </div>
+            </div>
+            <div class="bucket-categories-list" id="bucketListWants"></div>
+          </div>
+
+          <!-- BUCKET 3: SAVINGS & INVESTMENT -->
+          <div class="bucket-card" id="bucketCardSavings">
+            <div class="bucket-card-header" onclick="toggleBucketCollapse('Savings_Investments')">
+              <div class="bucket-header-left">
+                <span class="bucket-icon">📈</span>
+                <span class="bucket-name">Savings & Investment</span>
+              </div>
+              <div class="bucket-header-right">
+                <span class="bucket-budget" id="bucketTotalSavings">₹0.00</span>
+                <span class="bucket-percent-pill" id="bucketPercentSavings">0%</span>
+                <span class="bucket-arrow" id="arrowSavings">▾</span>
+              </div>
+            </div>
+            <div class="bucket-categories-list" id="bucketListSavings"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- COLUMN 2: CENTER ACTIVE CATEGORY GROUP BREAKDOWN -->
+      <section class="budget-active-breakdown-card">
+        <div class="active-breakdown-header">
+          <div class="active-header-left">
+            <div class="active-avatar" id="activeCategoryIcon">🍽️</div>
+            <div class="active-titles">
+              <h2 id="activeCategoryName">Dining Out</h2>
+              <p id="activeCategoryDesc">Breakfast, Lunch, Dinner and other eating out expenses</p>
+            </div>
+          </div>
+          <div class="active-header-right">
+            <div class="active-budget-badge">
+              <span class="lbl">Monthly Budget:</span>
+              <strong id="activeCategoryBudget">₹0.00</strong>
+            </div>
+            <div class="progress-bar-wrap" style="width: 140px; height: 6px;">
+              <div class="progress-fill bg-orange" id="activeCategoryProgress" style="width: 0%;"></div>
+            </div>
+            <span class="active-used-text" id="activeCategoryUsed">0% used</span>
+          </div>
+        </div>
+
+        <div class="active-table-container">
+          <table class="budget-subtable">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th class="text-right">Budget (₹)</th>
+                <th class="text-right">Spent (₹)</th>
+                <th class="text-right">Remaining (₹)</th>
+                <th class="text-center" width="160">% Used</th>
+              </tr>
+            </thead>
+            <tbody id="activeCategoryTableBody"></tbody>
+            <tfoot id="activeCategoryTableFoot">
+              <tr>
+                <th>Total</th>
+                <th class="text-right" id="footBudgetTotal">₹0.00</th>
+                <th class="text-right" id="footSpentTotal">₹0.00</th>
+                <th class="text-right" id="footRemainingTotal">₹0.00</th>
+                <th class="text-center" id="footPercentTotal">0%</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <!-- COLUMN 3: RIGHT DOCKED DETAILS & BUDGET EDITOR -->
+      <aside class="budget-inspector-card">
+        <div class="inspector-header">
+          <h3>Category Details</h3>
+          <button class="add-cat-btn" onclick="openAddCategoryModal()">+ Add Category</button>
+        </div>
+
+        <form id="budgetEditForm" onsubmit="handleSaveBudget(event)">
+          <input type="hidden" id="editCategoryId" />
+          <input type="hidden" id="editIsGroup" value="true" />
+
+          <div class="budget-form-field">
+            <label>CATEGORY / GROUP NAME</label>
+            <input type="text" id="inspectorCatName" class="panel-input" required />
+          </div>
+
+          <div class="budget-form-field">
+            <label>PARENT BUCKET</label>
+            <select id="inspectorBucketType" class="panel-select">
+              <option value="Needs">Things I Need</option>
+              <option value="Wants">Things I Want</option>
+              <option value="Savings_Investments">Savings & Investment</option>
+            </select>
+          </div>
+
+          <div class="budget-form-field">
+            <label>MONTHLY BUDGET (₹) *</label>
+            <input type="number" step="10" id="inspectorBudgetAmount" class="panel-input hero-budget-field" placeholder="0.00" required />
+            <small class="text-muted" style="font-size: 11px; margin-top: 3px;">
+              Updating this month will auto-adopt forward to future months.
+            </small>
+          </div>
+
+          <div class="budget-form-field">
+            <label>NOTES (OPTIONAL)</label>
+            <textarea id="inspectorNotes" class="panel-textarea" rows="3" placeholder="Eating out, restaurants, cafe, food delivery etc."></textarea>
+          </div>
+
+          <div class="inspector-actions-row">
+            <button type="button" class="btn btn-secondary" onclick="resetBudgetForActiveMonth()">Reset</button>
+            <button type="submit" class="btn btn-primary flex-1" id="btnSaveBudget">Save</button>
+          </div>
+        </form>
+      </aside>
+
+    </div>
+
+    <!-- Bottom Analytics Split -->
+    <section class="budget-bottom-grid">
+      <!-- Chart Card -->
+      <div class="bottom-card">
+        <div class="bottom-card-head">
+          <div class="head-left">
+            <span>📊</span>
+            <h3>Monthly Budget vs Spending</h3>
+          </div>
+          <div class="legend-row">
+            <span class="legend-item"><span class="dot bg-light-blue"></span> Budget</span>
+            <span class="legend-item"><span class="dot bg-blue"></span> Spent</span>
+          </div>
+        </div>
+        <div class="chart-container" id="budgetVsSpendingChart"></div>
+      </div>
+
+      <!-- Category Breakup Table Card -->
+      <div class="bottom-card">
+        <div class="bottom-card-head">
+          <div class="head-left">
+            <span>📋</span>
+            <h3>Monthly Category Breakup</h3>
+          </div>
+        </div>
+        <div class="bottom-table-scroll">
+          <table class="budget-subtable">
+            <thead>
+              <tr>
+                <th>Category Group</th>
+                <th class="text-right">Budget (₹)</th>
+                <th class="text-right">Spent (₹)</th>
+                <th class="text-right">Remaining (₹)</th>
+                <th class="text-center" width="130">% Used</th>
+              </tr>
+            </thead>
+            <tbody id="monthlyCategoryBreakupBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/budget.js"></script>
+</body>
+</html>

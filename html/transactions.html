@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- CSS Stylesheets (Relative to /html/) -->
+  <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/transactions.css" />
   
@@ -32,6 +32,9 @@
         <a href="transactions.html" class="nav-item">Transactions</a>
         <a href="import.html" class="nav-item">Import</a>
         <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="budget.html" class="nav-item">Budget</a>
+        <a href="loans.html" class="nav-item">Loans</a>
+        <a href="planner.html" class="nav-item">Planner</a>
         <a href="settings.html" class="nav-item">Settings</a>
       </nav>
     </div>
@@ -41,7 +44,7 @@
     </div>
   </header>
 
-  <!-- Transactions Workspace (Visible by default) -->
+  <!-- Transactions Workspace -->
   <main class="finny-shell">
     <section class="page-header">
       <div class="title-block">
@@ -50,19 +53,37 @@
       </div>
 
       <div class="header-actions">
-        <div class="date-range-control">
-          <button class="date-nav-btn" id="prevMonthBtn">‹</button>
+        <!-- Quick Period Selector Preset -->
+        <div class="preset-dropdown-wrap">
+          <select id="quickPeriodSelect" class="select-box period-select">
+            <option value="this_month">This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="this_week">This Week</option>
+            <option value="last_week">Last Week</option>
+            <option value="last_3_months">Last 3 Months</option>
+            <option value="last_6_months">Last 6 Months</option>
+            <option value="this_year">This Year</option>
+            <option value="last_year">Last Year</option>
+            <option value="custom" selected>Custom Range</option>
+          </select>
+        </div>
+
+        <!-- Custom Date Range Controls (Toggled) -->
+        <div class="date-range-control" id="customDateRangeControl">
+          <button class="date-nav-btn" id="prevMonthBtn" title="Previous Month">‹</button>
           <div class="date-display">
             <span class="cal-icon">📅</span>
             <input type="date" id="dateStart" />
             <span>–</span>
             <input type="date" id="dateEnd" />
           </div>
-          <button class="date-nav-btn" id="nextMonthBtn">›</button>
+          <button class="date-nav-btn" id="nextMonthBtn" title="Next Month">›</button>
         </div>
 
-        <button class="btn btn-secondary">More Actions ▾</button>
-        <button class="btn btn-primary" id="openAddTxnBtn">+ Add Transaction ▾</button>
+        <!-- Add Transaction Trigger -->
+        <button type="button" class="btn btn-primary" onclick="window.openTransactionModal()">
+          + Add Transaction
+        </button>
       </div>
     </section>
 
@@ -202,27 +223,28 @@
         <div class="pagination-bar">
           <span class="pagination-info" id="paginationInfo">Showing 0 of 0 transactions</span>
           <div class="pagination-btns">
-            <button class="page-btn">‹</button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn">›</button>
+            <button class="page-btn" id="prevPageBtn">‹</button>
+            <span id="pageIndicator" style="font-size: 12px; font-weight: 600; padding: 0 8px;">1</span>
+            <button class="page-btn" id="nextPageBtn">›</button>
           </div>
         </div>
       </section>
 
-      <!-- Right Details Sidebar -->
+      <!-- Right Details / Form Sidebar Tile -->
       <aside class="details-sidebar" id="detailsSidebar">
+        <!-- 1. EMPTY STATE -->
         <div id="detailsEmpty" class="details-empty-state">
           <p>Select a transaction to view its details</p>
         </div>
 
+        <!-- 2. READ-ONLY DETAILS STATE -->
         <div id="detailsActive" class="details-active-state" style="display: none;">
           <div class="details-header">
             <div class="details-title-row">
-              <div class="details-avatar" id="detailsAvatar">🍽️</div>
+              <div class="details-avatar" id="detailsAvatar">🏷️</div>
               <div class="details-headline">
-                <h3 id="detailsPayee">Merchant Name</h3>
-                <span class="details-time" id="detailsDateTime">01 Sep 2026</span>
+                <h3 id="detailsPayee">Payee Name</h3>
+                <span class="details-time" id="detailsDateTime">01 Sep 2026, 11:00:00</span>
               </div>
               <button class="close-details-btn" id="closeDetailsBtn">✕</button>
             </div>
@@ -266,27 +288,113 @@
           </div>
 
           <div class="details-actions">
-            <button class="btn btn-secondary flex-1">✏️ Edit</button>
-            <button class="btn btn-secondary flex-1">📋 Duplicate</button>
-            <button class="btn btn-danger-outline flex-1">🗑️ Delete</button>
+            <button type="button" class="btn btn-secondary flex-1" id="detEditBtn" onclick="switchToEditMode()">✏️ Edit</button>
+            <button type="button" class="btn btn-secondary flex-1" id="detDuplicateBtn">📋 Duplicate</button>
+            <button type="button" class="btn btn-danger-outline flex-1" id="detDeleteBtn" onclick="deleteActiveTransaction()">🗑️ Delete</button>
           </div>
 
           <div class="account-balance-card">
             <span class="det-label">Account Balance</span>
-            <h4 id="detAccountName">Kotak Bank</h4>
+            <h4 id="detAccountName">Account</h4>
             <div class="acc-balance-row">
-              <span class="acc-balance-num">₹1,32,450.00</span>
-              <span class="trend-pill">↑ 8.2%</span>
+              <span class="acc-balance-num" id="detAccountBalance">₹0.00</span>
+              <span class="trend-pill" id="detAccountTrend">Active</span>
             </div>
           </div>
+        </div>
+
+        <!-- 3. IN-PLACE FORM STATE (ADD / EDIT) -->
+        <div id="detailsFormState" class="details-form-state" style="display: none;">
+          <div class="details-header">
+            <div class="details-title-row">
+              <div class="details-avatar form-avatar" id="formAvatarIcon">✍️</div>
+              <div class="details-headline">
+                <h3 id="panelFormTitle" style="font-size: 15px; font-weight: 700;">Add Transaction</h3>
+                <span class="details-time" id="panelFormSubtitle">Enter transaction details</span>
+              </div>
+              <button type="button" class="close-details-btn" onclick="cancelPanelForm()">✕</button>
+            </div>
+          </div>
+
+          <form id="panelTxnForm" onsubmit="handlePanelFormSubmit(event)">
+            <input type="hidden" id="panelTxnId" value="">
+            <input type="hidden" id="panelTransferPairId" value="">
+
+            <!-- Segmented Pill Switcher -->
+            <div class="panel-type-switcher">
+              <button type="button" class="type-pill-btn active" data-type="Expense" onclick="setPanelType('Expense')">Expense</button>
+              <button type="button" class="type-pill-btn" data-type="Income" onclick="setPanelType('Income')">Income</button>
+              <button type="button" class="type-pill-btn" data-type="Transfer" onclick="setPanelType('Transfer')">Transfer</button>
+            </div>
+
+            <!-- Amount Field -->
+            <div class="form-input-group">
+              <label class="panel-label">Amount (₹) *</label>
+              <input type="number" step="0.01" min="0.01" id="panelAmount" class="panel-input hero-amount-field" placeholder="0.00" required>
+            </div>
+
+            <!-- Expense / Income: Single Account & Category -->
+            <div class="form-input-group" id="panelGroupSingleAccount">
+              <label class="panel-label">Account *</label>
+              <select id="panelAccountId" class="panel-select"></select>
+            </div>
+
+            <div class="form-input-group" id="panelGroupCategory">
+              <label class="panel-label">Category</label>
+              <select id="panelCategoryId" class="panel-select"></select>
+            </div>
+
+            <!-- Transfer Mode: From & To Accounts -->
+            <div id="panelGroupTransferAccounts" style="display: none; flex-direction: column; gap: 10px;">
+              <div class="form-input-group">
+                <label class="panel-label">From Account (Debit) *</label>
+                <select id="panelFromAccountId" class="panel-select"></select>
+              </div>
+              <div class="form-input-group">
+                <label class="panel-label">To Account (Credit) *</label>
+                <select id="panelToAccountId" class="panel-select"></select>
+              </div>
+            </div>
+
+            <!-- Payee / Description -->
+            <div class="form-input-group">
+              <label class="panel-label">Payee / Description *</label>
+              <input type="text" id="panelTitle" class="panel-input" placeholder="e.g. Grocery, Salary, House Rent" required>
+            </div>
+
+            <!-- Date & Time Row -->
+            <div class="panel-grid-2">
+              <div class="form-input-group">
+                <label class="panel-label">Date *</label>
+                <input type="date" id="panelDate" class="panel-input" required>
+              </div>
+              <div class="form-input-group">
+                <label class="panel-label">Time</label>
+                <input type="time" step="1" id="panelTime" class="panel-input">
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-input-group">
+              <label class="panel-label">Notes</label>
+              <textarea id="panelNotes" class="panel-textarea" rows="2" placeholder="Optional notes..."></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="panel-form-actions">
+              <button type="button" class="btn btn-secondary flex-1" id="panelBtnCancel" onclick="cancelPanelForm()">Cancel</button>
+              <button type="submit" id="panelBtnSave" class="btn btn-primary flex-1">Save</button>
+            </div>
+          </form>
         </div>
       </aside>
     </section>
   </main>
 
-  <!-- Modular Scripts -->
+  <!-- Modular Scripts with Cache-Busting Parameters -->
   <script src="../js/supabaseClient.js"></script>
   <script src="../js/common.js"></script>
-  <script src="../js/transactions.js"></script>
+  <script src="../js/transactionModal.js?v=4.0"></script>
+  <script src="../js/transactions.js?v=4.0"></script>
 </body>
 </html>

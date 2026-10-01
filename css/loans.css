@@ -1,0 +1,633 @@
+/* ==========================================================================
+   FINNY LOANS & BORROWINGS MODULE — COMPLETE RESPONSIVE STYLESHEET
+   ========================================================================== */
+
+/* Page Header */
+.loans-page-header {
+  padding: 16px 32px 10px 32px;
+  flex-shrink: 0;
+}
+
+.loans-header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.loans-title-block h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.loans-title-block p {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.loans-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.as-of-date-pill {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+/* Master Fixed Viewport Grid */
+.loans-workspace-shell {
+  padding: 0 32px 32px 32px;
+  height: calc(100vh - 130px);
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.loans-grid-container {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Left Navigation Sidebar */
+.loans-sidebar-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-card, 0 10px 25px -4px rgba(15, 23, 42, 0.06));
+}
+
+.loans-sidebar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 4px 8px 10px 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.loans-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.loans-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.loans-menu-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.loans-menu-item.active {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.sidebar-add-btn {
+  margin-top: 14px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.sidebar-add-btn:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+/* Right Main Feed */
+.loans-main-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 1. Top 4 KPI Cards */
+.loans-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.loan-kpi-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-card, 0 10px 25px -4px rgba(15, 23, 42, 0.06));
+}
+
+.loan-kpi-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.bg-tint-red { background: #fef2f2; color: #dc2626; }
+.bg-tint-green { background: #f0fdf4; color: #16a34a; }
+.bg-tint-purple { background: #faf5ff; color: #9333ea; }
+.bg-tint-orange { background: #fff7ed; color: #ea580c; }
+
+.loan-kpi-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.loan-kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.loan-kpi-value {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin-top: 2px;
+}
+
+.text-navy { color: #0f172a; }
+.text-red { color: #dc2626; }
+.text-green { color: #16a34a; }
+.text-orange { color: #ea580c; }
+
+.loan-kpi-subtext {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* 2. Analytics Row */
+.loans-analytics-row {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 18px;
+}
+
+.loan-card-shell {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: var(--shadow-card, 0 10px 25px -4px rgba(15, 23, 42, 0.06));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.loan-card-head {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+.loan-card-head.between {
+  justify-content: space-between;
+}
+
+.loan-card-head h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.head-left-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Donut Visualization */
+.donut-analytics-box {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1;
+}
+
+.donut-chart-wrap {
+  width: 130px;
+  height: 130px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.donut-circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(#2563eb 0% 38%, #7c3aed 38% 65%, #f59e0b 65% 83%, #ec4899 83% 93%, #10b981 93% 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-inner-hole {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.donut-hole-amt {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.donut-hole-lbl {
+  font-size: 8px;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.donut-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.donut-legend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.legend-color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+/* Stacked Projection Bars */
+.monthly-projection-container {
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 12px;
+  flex: 1;
+  min-height: 150px;
+}
+
+.proj-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.proj-stacked-bars {
+  width: 22px;
+  height: 110px;
+  display: flex;
+  flex-direction: column-reverse;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.proj-slice {
+  width: 100%;
+  transition: height 0.3s ease;
+}
+
+.proj-month-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Completion Timeline */
+.completion-timeline-list {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 180px;
+}
+
+.timeline-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+}
+
+.timeline-name {
+  font-weight: 600;
+  color: #1e293b;
+  width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-progress-wrap {
+  flex: 1;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.timeline-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.timeline-date {
+  font-size: 10px;
+  color: #64748b;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* 3. Master All Borrowings Table */
+.loan-search-input {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  outline: none;
+  min-width: 220px;
+}
+
+.loan-table-scroll-wrap {
+  overflow-x: auto;
+  max-height: 420px;
+}
+
+.loans-ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.loans-ledger-table th {
+  background: #f8fafc;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.loans-ledger-table td {
+  padding: 11px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.loans-ledger-table tbody tr:hover {
+  background: #fafcff;
+}
+
+.loan-type-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.type-emi { background: #eff6ff; color: #2563eb; }
+.type-yearly { background: #fff7ed; color: #ea580c; }
+.type-hand { background: #faf5ff; color: #9333ea; }
+.type-chit { background: #f0fdf4; color: #16a34a; }
+
+/* 4. Bottom Operational Split */
+.loans-bottom-operational-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 18px;
+}
+
+/* Upcoming Payments Stream */
+.upcoming-payments-stream {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.upcoming-pay-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 12px;
+}
+
+.up-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.up-date {
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.up-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.up-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.up-amt {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Calendar Grid */
+.payments-cal-grid {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.cal-header-cell {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  padding-bottom: 4px;
+}
+
+.cal-day-cell {
+  height: 44px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #334155;
+  position: relative;
+}
+
+.cal-day-cell.has-due {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.cal-due-pill {
+  font-size: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 1px 4px;
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+.cal-nav-btn {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Insights List */
+.loan-insights-list {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.insight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.insight-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.insight-content h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.insight-content p {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+@media (max-width: 1300px) {
+  .loans-grid-container {
+    grid-template-columns: 1fr;
+  }
+  .loans-analytics-row,
+  .loans-bottom-operational-grid {
+    grid-template-columns: 1fr;
+  }
+}

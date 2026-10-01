@@ -8,12 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- Correct Relative Paths (../css/) -->
+  <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="../css/settings.css" />
-  <link rel="stylesheet" href="../css/settings-accounts.css" />
-  <link rel="stylesheet" href="../css/settings-categories.css" />
-  <link rel="stylesheet" href="../css/settings-financialdata.css" />
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -23,7 +20,7 @@
   <header class="finny-nav">
     <div class="nav-left">
       <div class="brand-logo">
-        <span class="logo-box">FF</span>
+        <span class="logo-box">F</span>
         <div class="brand-text">
           <span class="brand-name">Finny</span>
           <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
@@ -35,22 +32,31 @@
         <a href="transactions.html" class="nav-item">Transactions</a>
         <a href="import.html" class="nav-item">Import</a>
         <a href="reconcile.html" class="nav-item">Reconcile</a>
-        <a href="settings.html" class="nav-item active">Settings</a>
+        <a href="budget.html" class="nav-item">Budget</a>
+        <a href="loans.html" class="nav-item">Loans</a>
+        <a href="planner.html" class="nav-item">Planner</a>
+        <a href="settings.html" class="nav-item">Settings</a>
       </nav>
     </div>
     <div class="nav-right">
-      <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">🌙</button>
-      <div class="user-avatar" title="Dinesh Reddy">DR</div>
+      <button class="nav-icon-btn" title="Search">🔍</button>
+      <button class="nav-icon-btn" id="themeToggleBtn" title="Theme">🌙</button>
+      <button class="nav-icon-btn nav-badge-wrap" title="Notifications">
+        🔔
+        <span class="nav-badge-count">2</span>
+      </button>
+      <div class="user-avatar" title="Dinesh Reddy">DS</div>
     </div>
   </header>
 
-  <main class="finny-shell">
-    <div class="settings-shell">
+  <!-- Main Settings Workspace Shell -->
+  <main class="settings-workspace-shell">
+    <div class="settings-shell-grid">
 
       <!-- LEFT SIDEBAR -->
       <aside class="settings-sidebar">
         <div class="settings-sidebar-header">
-          <span style="font-size: 20px;">⚙️</span>
+          <span class="settings-header-icon">⚙️</span>
           <div>
             <h2>Settings</h2>
             <p>Manage your preferences and data</p>
@@ -90,19 +96,19 @@
         </div>
       </aside>
 
-      <!-- RIGHT CONTENT AREA -->
-      <div class="settings-content">
+      <!-- RIGHT SCROLLING CONTENT AREA -->
+      <section class="settings-content">
         
         <!-- SECTION 1: ACCOUNTS & GROUPS -->
-        <div id="settingsAccountsSection">
-          <header class="settings-content-header" style="margin-bottom: 20px;">
+        <div id="settingsAccountsSection" class="settings-section active">
+          <header class="settings-content-header">
             <div class="settings-title-block">
               <h1>Account Groups & Accounts</h1>
               <p>Expand groups to inspect accounts or reassign them to different groups instantly.</p>
             </div>
 
             <div class="settings-actions">
-              <input type="text" id="settingsSearchInput" placeholder="Search groups or accounts..." class="search-input-wrap form-input" style="min-width: 240px;" />
+              <input type="text" id="settingsSearchInput" placeholder="Search groups or accounts..." class="panel-input" style="min-width: 240px;" />
               <button class="btn btn-secondary" onclick="openCreateAccountModal()">+ Add Account</button>
               <button class="btn btn-primary" onclick="openCreateGroupModal()">+ Add Group</button>
             </div>
@@ -113,7 +119,7 @@
               <!-- Asset Groups Card -->
               <div class="settings-card">
                 <div class="settings-card-head">
-                  <span class="bs-badge-icon asset-badge">🏛️</span>
+                  <span class="bs-badge-icon asset-badge">🏛️️</span>
                   <div>
                     <h2>Asset Groups</h2>
                     <p>Click any row to expand accounts or reassign them</p>
@@ -180,15 +186,15 @@
         </div>
 
         <!-- SECTION 2: CATEGORIES & GROUPS -->
-        <div id="settingsCategoriesSection" style="display: none;">
-          <header class="settings-content-header" style="margin-bottom: 20px;">
+        <div id="settingsCategoriesSection" class="settings-section" style="display: none;">
+          <header class="settings-content-header">
             <div class="settings-title-block">
               <h1>Category Groups & Categories</h1>
               <p>Expand category groups to inspect categories or reassign them to different groups instantly.</p>
             </div>
 
             <div class="settings-actions">
-              <input type="text" id="catSearchInput" placeholder="Search categories or groups..." class="search-input-wrap form-input" style="min-width: 240px;" />
+              <input type="text" id="catSearchInput" placeholder="Search categories or groups..." class="panel-input" style="min-width: 240px;" />
               <button class="btn btn-secondary" onclick="openCreateCategoryModal()">+ Add Category</button>
               <button class="btn btn-primary" onclick="openCreateCatGroupModal()">+ Add Category Group</button>
             </div>
@@ -265,9 +271,9 @@
           </div>
         </div>
 
-        <!-- SECTION 3: IMPORT ACCOUNT MAPPING (SWAPPABLE TAB VIEW) -->
-        <div id="settingsAccountMappingSection" style="display: none;">
-          <header class="settings-content-header" style="margin-bottom: 20px;">
+        <!-- SECTION 3: IMPORT ACCOUNT MAPPING -->
+        <div id="settingsAccountMappingSection" class="settings-section" style="display: none;">
+          <header class="settings-content-header">
             <div class="settings-title-block">
               <h1>Import Account Mapping</h1>
               <p>Map raw account strings from statement files (e.g. Paytm, Bank statements) to your official Finny accounts.</p>
@@ -298,7 +304,7 @@
           </div>
         </div>
 
-      </div>
+      </section>
     </div>
   </main>
 
@@ -314,7 +320,7 @@
         <div class="form-grid-2">
           <div class="form-field">
             <label>Group Name *</label>
-            <input type="text" id="groupNameInput" class="form-input" placeholder="e.g. Education Fund" />
+            <input type="text" id="groupNameInput" class="panel-input" placeholder="e.g. Education Fund" />
           </div>
           <div class="form-field">
             <label>Type *</label>
@@ -326,7 +332,7 @@
         </div>
         <div class="form-field">
           <label>Description</label>
-          <textarea id="groupDescInput" class="form-textarea" placeholder="Describe the purpose of this group..."></textarea>
+          <textarea id="groupDescInput" class="panel-textarea" placeholder="Describe the purpose of this group..."></textarea>
         </div>
         <div class="form-field">
           <label>Icon</label>
@@ -344,7 +350,7 @@
         </div>
         <div class="form-field" style="width: 140px;">
           <label>Display Order</label>
-          <input type="number" id="groupOrderInput" class="form-input" value="1" min="1" />
+          <input type="number" id="groupOrderInput" class="panel-input" value="1" min="1" />
         </div>
       </div>
       <div class="modal-footer">
@@ -365,17 +371,17 @@
         <div class="form-grid-2">
           <div class="form-field">
             <label>Account Name *</label>
-            <input type="text" id="accNameInput" class="form-input" placeholder="e.g. HDFC Salary" />
+            <input type="text" id="accNameInput" class="panel-input" placeholder="e.g. HDFC Salary" />
           </div>
           <div class="form-field">
             <label>Account Group *</label>
-            <select id="accGroupSelect" class="form-select"></select>
+            <select id="accGroupSelect" class="panel-select"></select>
           </div>
         </div>
         <div class="form-grid-2">
           <div class="form-field">
             <label>Account Type *</label>
-            <select id="accTypeSelect" class="form-select">
+            <select id="accTypeSelect" class="panel-select">
               <option value="Savings">Savings</option>
               <option value="Current">Current</option>
               <option value="Credit Card">Credit Card</option>
@@ -386,22 +392,22 @@
           </div>
           <div class="form-field">
             <label>Institution</label>
-            <input type="text" id="accInstitutionInput" class="form-input" placeholder="e.g. HDFC Bank, Kotak" />
+            <input type="text" id="accInstitutionInput" class="panel-input" placeholder="e.g. HDFC Bank, Kotak" />
           </div>
         </div>
         <div class="form-grid-2">
           <div class="form-field">
             <label>Opening Balance</label>
-            <input type="number" id="accOpeningBalanceInput" class="form-input" value="0.00" step="0.01" />
+            <input type="number" id="accOpeningBalanceInput" class="panel-input" value="0.00" step="0.01" />
           </div>
           <div class="form-field">
             <label>Account Number (Masked)</label>
-            <input type="text" id="accMaskedNumberInput" class="form-input" placeholder="**** 1234" />
+            <input type="text" id="accMaskedNumberInput" class="panel-input" placeholder="**** 1234" />
           </div>
         </div>
         <div class="form-field">
           <label>Notes</label>
-          <textarea id="accNotesInput" class="form-textarea" placeholder="Optional notes..."></textarea>
+          <textarea id="accNotesInput" class="panel-textarea" placeholder="Optional notes..."></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -424,7 +430,7 @@
         </p>
         <div class="form-field">
           <label>Target Group *</label>
-          <select id="moveTargetGroupSelect" class="form-select"></select>
+          <select id="moveTargetGroupSelect" class="panel-select"></select>
         </div>
       </div>
       <div class="modal-footer">
@@ -449,7 +455,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
-        <button class="btn btn-danger-outline" id="confirmDeleteBtn" style="background:var(--finny-expense); color:#fff; border:none;">Delete</button>
+        <button class="btn btn-primary delete-confirm-btn" id="confirmDeleteBtn" style="background:#dc2626; border-color:#dc2626;">Delete</button>
       </div>
     </div>
   </div>
@@ -465,7 +471,7 @@
         <div class="form-grid-2">
           <div class="form-field">
             <label>Group Name *</label>
-            <input type="text" id="catGroupNameInput" class="form-input" placeholder="e.g. Food & Dining" />
+            <input type="text" id="catGroupNameInput" class="panel-input" placeholder="e.g. Food & Dining" />
           </div>
           <div class="form-field">
             <label>Type *</label>
@@ -477,7 +483,7 @@
         </div>
         <div class="form-field">
           <label>Description</label>
-          <textarea id="catGroupDescInput" class="form-textarea" placeholder="Describe this category group..."></textarea>
+          <textarea id="catGroupDescInput" class="panel-textarea" placeholder="Describe this category group..."></textarea>
         </div>
         <div class="form-field">
           <label>Icon</label>
@@ -511,11 +517,11 @@
         <div class="form-grid-2">
           <div class="form-field">
             <label>Category Name *</label>
-            <input type="text" id="categoryNameInput" class="form-input" placeholder="e.g. Groceries" />
+            <input type="text" id="categoryNameInput" class="panel-input" placeholder="e.g. Groceries" />
           </div>
           <div class="form-field">
             <label>Parent Group *</label>
-            <select id="categoryParentGroupSelect" class="form-select"></select>
+            <select id="categoryParentGroupSelect" class="panel-select"></select>
           </div>
         </div>
       </div>
@@ -539,7 +545,7 @@
         </p>
         <div class="form-field">
           <label>Target Category Group *</label>
-          <select id="moveTargetCatGroupSelect" class="form-select"></select>
+          <select id="moveTargetCatGroupSelect" class="panel-select"></select>
         </div>
       </div>
       <div class="modal-footer">
@@ -559,13 +565,13 @@
       <div class="modal-body">
         <div class="form-field" style="margin-bottom: 14px;">
           <label>Raw Statement Account Name *</label>
-          <input type="text" id="newRawAccountInput" class="form-input" placeholder="e.g. Kotak Mahindra Bank - 66" />
+          <input type="text" id="newRawAccountInput" class="panel-input" placeholder="e.g. Kotak Mahindra Bank - 66" />
           <small class="text-muted" style="display:block; margin-top:4px;">Enter the exact account text found in your statement column.</small>
         </div>
 
         <div class="form-field">
           <label>Target Finny Account *</label>
-          <select id="newTargetAccountSelect" class="form-select"></select>
+          <select id="newTargetAccountSelect" class="panel-select"></select>
         </div>
       </div>
       <div class="modal-footer">
@@ -575,7 +581,7 @@
     </div>
   </div>
 
-  <!-- Correct Relative Script Paths (../js/) -->
+  <!-- Scripts -->
   <script src="../js/supabaseClient.js"></script>
   <script src="../js/common.js"></script>
   <script src="../js/settings.js"></script>

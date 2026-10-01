@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finny — Loans & Borrowings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/loans.css" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Finny Navigation Bar -->
+  <header class="finny-nav">
+    <div class="nav-left">
+      <div class="brand-logo">
+        <span class="logo-box">F</span>
+        <div class="brand-text">
+          <span class="brand-name">Finny</span>
+          <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
+        </div>
+      </div>
+       <nav class="nav-links">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="accounts.html" class="nav-item">Accounts</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="import.html" class="nav-item">Import</a>
+        <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="budget.html" class="nav-item">Budget</a>
+        <a href="loans.html" class="nav-item">Loans</a>
+        <a href="planner.html" class="nav-item">Planner</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon-btn" title="Search">🔍</button>
+      <button class="nav-icon-btn" id="themeToggleBtn" title="Theme">🌙</button>
+      <button class="nav-icon-btn nav-badge-wrap" title="Notifications">
+        🔔
+        <span class="nav-badge-count">2</span>
+      </button>
+      <div class="user-avatar" title="Dinesh Reddy">DS</div>
+    </div>
+  </header>
+
+  <!-- Page Header -->
+  <div class="loans-page-header">
+    <div class="loans-header-top-row">
+      <div class="loans-title-block">
+        <h1>Loans & Borrowings</h1>
+        <p>Track all your loans, EMIs, payables and hand loans in one place.</p>
+      </div>
+
+      <div class="loans-header-controls">
+        <div class="as-of-date-pill">
+          <span>📅 As of Today</span>
+        </div>
+        <button class="btn btn-primary" onclick="openBorrowingModal()">
+          <span>+</span> Add Borrowing
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Master Layout Shell -->
+  <main class="loans-workspace-shell">
+    <div class="loans-grid-container">
+
+      <!-- LEFT NAVIGATION PILL SIDEBAR -->
+      <aside class="loans-nav-sidebar">
+        <div class="loans-sidebar-card">
+          <div class="loans-sidebar-title">Loans & Borrowings</div>
+          <nav class="loans-menu-list">
+            <button class="loans-menu-item active" onclick="filterBorrowingsTable('ALL', this)">
+              <span>🏛️</span> Overview
+            </button>
+            <button class="loans-menu-item" onclick="filterBorrowingsTable('ALL', this)">
+              <span>📋</span> All Borrowings
+            </button>
+            <button class="loans-menu-item" onclick="filterBorrowingsTable('EMI Loan', this)">
+              <span>💳</span> EMI Loans
+            </button>
+            <button class="loans-menu-item" onclick="filterBorrowingsTable('Yearly Loan', this)">
+              <span>🪙</span> Interest / Yearly Loans
+            </button>
+            <button class="loans-menu-item" onclick="filterBorrowingsTable('Hand Loan', this)">
+              <span>👥</span> Payables & Hand Loans
+            </button>
+            <button class="loans-menu-item" onclick="scrollToPaymentCalendar()">
+              <span>📅</span> Payment Calendar
+            </button>
+          </nav>
+          
+          <button class="sidebar-add-btn" onclick="openBorrowingModal()">
+            <span>+</span> Add Borrowing
+          </button>
+        </div>
+      </aside>
+
+      <!-- RIGHT DASHBOARD WORKSPACE -->
+      <div class="loans-main-feed">
+
+        <!-- 1. TOP 4 KPI CARDS -->
+        <section class="loans-kpi-row">
+          <!-- Total Outstanding -->
+          <div class="loan-kpi-card">
+            <div class="loan-kpi-icon-box bg-tint-red">🏛️</div>
+            <div class="loan-kpi-info">
+              <span class="loan-kpi-label">Total Outstanding</span>
+              <h2 class="loan-kpi-value text-red" id="kpiTotalOutstanding">₹0.00</h2>
+              <span class="loan-kpi-subtext" id="kpiActiveCount">Across 0 borrowings</span>
+            </div>
+          </div>
+
+          <!-- Total Amount Paid -->
+          <div class="loan-kpi-card">
+            <div class="loan-kpi-icon-box bg-tint-green">💵</div>
+            <div class="loan-kpi-info">
+              <span class="loan-kpi-label">Total Amount Paid</span>
+              <h2 class="loan-kpi-value text-green" id="kpiTotalPaid">₹0.00</h2>
+              <div class="progress-bar-wrap">
+                <div class="progress-fill bg-green" id="kpiPaidProgress" style="width: 0%;"></div>
+              </div>
+              <span class="loan-kpi-subtext" id="kpiPaidPercent">0% paid</span>
+            </div>
+          </div>
+
+          <!-- Monthly EMI Commitment -->
+          <div class="loan-kpi-card">
+            <div class="loan-kpi-icon-box bg-tint-purple">📅</div>
+            <div class="loan-kpi-info">
+              <span class="loan-kpi-label">Monthly EMI Commitment</span>
+              <h2 class="loan-kpi-value text-navy" id="kpiMonthlyCommitment">₹0.00</h2>
+              <span class="loan-kpi-subtext" id="kpiActiveEmiCount">0 active EMI loans</span>
+            </div>
+          </div>
+
+          <!-- Next Payment Due -->
+          <div class="loan-kpi-card">
+            <div class="loan-kpi-icon-box bg-tint-orange">⏰</div>
+            <div class="loan-kpi-info">
+              <span class="loan-kpi-label">Next Payment Due</span>
+              <h2 class="loan-kpi-value text-orange" id="kpiNextPaymentDue">₹0.00</h2>
+              <span class="loan-kpi-subtext" id="kpiNextPaymentDesc">None scheduled</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. ANALYTICS ROW (Donut Chart, 6-Month Projection, Timeline) -->
+        <section class="loans-analytics-row">
+          
+          <!-- Outstanding by Type -->
+          <div class="loan-card-shell flex-1">
+            <div class="loan-card-head">
+              <span>🔄</span>
+              <h3>Outstanding by Type</h3>
+            </div>
+            <div class="donut-analytics-box">
+              <div class="donut-chart-wrap">
+                <div class="donut-circle" id="donutVisual">
+                  <div class="donut-inner-hole">
+                    <span class="donut-hole-amt" id="donutCenterTotal">₹0</span>
+                    <span class="donut-hole-lbl">Total Outstanding</span>
+                  </div>
+                </div>
+              </div>
+              <div class="donut-legend-list" id="donutLegendList"></div>
+            </div>
+          </div>
+
+          <!-- Monthly Payments (Next 6 Months) -->
+          <div class="loan-card-shell flex-1">
+            <div class="loan-card-head">
+              <span>📅</span>
+              <h3>Monthly Payments (Next 6 Months)</h3>
+            </div>
+            <div class="monthly-projection-container" id="stackedPaymentsChart"></div>
+          </div>
+
+          <!-- Loan Completion Timeline -->
+          <div class="loan-card-shell flex-1">
+            <div class="loan-card-head">
+              <span>📊</span>
+              <h3>Loan Completion Timeline</h3>
+            </div>
+            <div class="completion-timeline-list" id="loanTimelineList"></div>
+          </div>
+
+        </section>
+
+        <!-- 3. MASTER ALL BORROWINGS TABLE -->
+        <section class="loan-card-shell" id="allBorrowingsCard">
+          <div class="loan-card-head between">
+            <div class="head-left-title">
+              <span>🏛️</span>
+              <h3>All Borrowings</h3>
+            </div>
+            <div class="head-filter-actions">
+              <input type="text" id="loanSearchInput" class="loan-search-input" placeholder="Search loans, lenders..." />
+            </div>
+          </div>
+
+          <div class="loan-table-scroll-wrap">
+            <table class="finny-table loans-ledger-table">
+              <thead>
+                <tr>
+                  <th>Borrowing Name</th>
+                  <th>Type</th>
+                  <th>Lender / Person</th>
+                  <th class="text-right">Taken Amount</th>
+                  <th class="text-right">EMI / Payment</th>
+                  <th class="text-center">Tenure (Paid/Total)</th>
+                  <th class="text-right">Total Payable</th>
+                  <th>Taken On</th>
+                  <th>Expected Close</th>
+                  <th class="text-right">Paid Till Now</th>
+                  <th class="text-right">Remaining</th>
+                  <th width="120" class="text-center">Progress</th>
+                  <th width="70" class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="loansTableBody">
+                <tr>
+                  <td colspan="13" class="text-center text-muted" style="padding: 40px;">Loading borrowings...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 4. BOTTOM OPERATIONAL SPLIT (Upcoming, Calendar, Insights) -->
+        <section class="loans-bottom-operational-grid" id="calendarSection">
+          
+          <!-- Upcoming Payments List -->
+          <div class="loan-card-shell">
+            <div class="loan-card-head between">
+              <div class="head-left-title">
+                <span>📅</span>
+                <h3>Upcoming Payments</h3>
+              </div>
+              <span class="text-muted" style="font-size: 11px; font-weight: 600;">Next 30 Days</span>
+            </div>
+            <div class="upcoming-payments-stream" id="upcomingPaymentsList"></div>
+          </div>
+
+          <!-- Payments Calendar -->
+          <div class="loan-card-shell">
+            <div class="loan-card-head between">
+              <div class="head-left-title">
+                <span>🗓️</span>
+                <h3 id="calMonthHeader">Payments Calendar</h3>
+              </div>
+              <div class="cal-nav-buttons">
+                <button class="cal-nav-btn" onclick="navCalMonth(-1)">‹</button>
+                <button class="cal-nav-btn" onclick="navCalMonth(1)">›</button>
+              </div>
+            </div>
+            <div class="payments-cal-grid" id="paymentsCalendarGrid"></div>
+          </div>
+
+          <!-- Loan Insights -->
+          <div class="loan-card-shell">
+            <div class="loan-card-head">
+              <span>💡</span>
+              <h3>Loan Insights</h3>
+            </div>
+            <div class="loan-insights-list" id="loanInsightsList"></div>
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ADD / EDIT BORROWING MODAL -->
+  <div class="modal-overlay" id="borrowingModal">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 id="borrowingModalTitle">Add Borrowing</h3>
+        <button class="modal-close-btn" onclick="closeBorrowingModal()">✕</button>
+      </div>
+
+      <form id="borrowingForm" onsubmit="handleSaveBorrowing(event)">
+        <div class="modal-body">
+          <input type="hidden" id="borrowingId" />
+
+          <div class="form-grid-2">
+            <div class="budget-form-field">
+              <label>BORROWING NAME *</label>
+              <input type="text" id="loanNameInput" class="panel-input" placeholder="e.g. HDFC Personal Loan, Scooty Loan" required />
+            </div>
+            <div class="budget-form-field">
+              <label>LOAN TYPE *</label>
+              <select id="loanTypeSelect" class="panel-select" onchange="recalcLoanEstimates()">
+                <option value="EMI Loan">EMI Loan</option>
+                <option value="Yearly Loan">Interest / Yearly Loan</option>
+                <option value="Hand Loan">Hand Loan / Payables</option>
+                <option value="Chit Fund">Chit Fund</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="budget-form-field">
+              <label>LENDER / PERSON *</label>
+              <input type="text" id="loanLenderInput" class="panel-input" placeholder="e.g. HDFC Bank, SBI, Ramesh" required />
+            </div>
+            <div class="budget-form-field">
+              <label>LINKED LIABILITY ACCOUNT</label>
+              <select id="loanAccountSelect" class="panel-select">
+                <option value="">(None / Direct Tracking)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="budget-form-field">
+              <label>SANCTIONED / TAKEN AMOUNT (₹) *</label>
+              <input type="number" step="100" id="loanPrincipalInput" class="panel-input" placeholder="0.00" required oninput="recalcLoanEstimates()" />
+            </div>
+            <div class="budget-form-field">
+              <label>MONTHLY EMI / PAYMENT AMOUNT (₹) *</label>
+              <input type="number" step="10" id="loanEmiInput" class="panel-input" placeholder="0.00" required oninput="recalcLoanEstimates()" />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="budget-form-field">
+              <label>TOTAL TENURE (MONTHS) *</label>
+              <input type="number" id="loanTenureInput" class="panel-input" value="60" min="1" required oninput="recalcLoanEstimates()" />
+            </div>
+            <div class="budget-form-field">
+              <label>ESTIMATED TOTAL PAYABLE (₹) *</label>
+              <input type="number" step="100" id="loanTotalPayableInput" class="panel-input" placeholder="0.00" required />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="budget-form-field">
+              <label>START DATE *</label>
+              <input type="date" id="loanStartDateInput" class="panel-input" required onchange="recalcLoanEstimates()" />
+            </div>
+            <div class="budget-form-field">
+              <label>EXPECTED CLOSE DATE *</label>
+              <input type="date" id="loanEndDateInput" class="panel-input" required />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="budget-form-field">
+              <label>PAYMENT DAY OF MONTH (1-31) *</label>
+              <input type="number" id="loanPaymentDayInput" class="panel-input" value="5" min="1" max="31" required />
+            </div>
+            <div class="budget-form-field">
+              <label>STATUS</label>
+              <select id="loanStatusSelect" class="panel-select">
+                <option value="Active">Active</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="budget-form-field">
+            <label>NOTES / ACCOUNT NUMBER</label>
+            <textarea id="loanNotesInput" class="panel-textarea" rows="2" placeholder="Account no, reference, purpose..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeBorrowingModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveBorrowing">Save Borrowing</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/loans.js"></script>
+</body>
+</html>

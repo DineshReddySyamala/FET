@@ -19,211 +19,211 @@
   <header class="finny-nav">
     <div class="nav-left">
       <div class="brand-logo">
-        <span class="logo-box">FF</span>
+        <span class="logo-box">F</span>
         <div class="brand-text">
           <span class="brand-name">Finny</span>
           <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
         </div>
       </div>
-      <nav class="nav-links">
+       <nav class="nav-links">
         <a href="dashboard.html" class="nav-item">Dashboard</a>
         <a href="accounts.html" class="nav-item">Accounts</a>
         <a href="transactions.html" class="nav-item">Transactions</a>
-        <a href="import.html" class="nav-item active">Import</a>
+        <a href="import.html" class="nav-item">Import</a>
         <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="budget.html" class="nav-item">Budget</a>
+        <a href="loans.html" class="nav-item">Loans</a>
+        <a href="planner.html" class="nav-item">Planner</a>
         <a href="settings.html" class="nav-item">Settings</a>
       </nav>
     </div>
     <div class="nav-right">
-      <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">🌙</button>
-      <div class="user-avatar" title="Dinesh Reddy">DR</div>
+      <button class="nav-icon-btn" title="Search">🔍</button>
+      <button class="nav-icon-btn" id="themeToggleBtn" title="Theme">🌙</button>
+      <button class="nav-icon-btn nav-badge-wrap" title="Notifications">
+        🔔
+        <span class="nav-badge-count">2</span>
+      </button>
+      <div class="user-avatar" title="Dinesh Reddy">DS</div>
     </div>
   </header>
 
-  <!-- Main Import Shell -->
-  <main class="finny-shell">
+  <!-- Page Header Container -->
+  <div class="import-page-header">
+    <div class="import-header-top-row">
+      <div class="import-title-block">
+        <h1>Import Transactions <span class="beta-badge">Beta</span></h1>
+        <p>Review and approve auto-ingested statement transactions. Edit details if needed, then add them to your ledger.</p>
+      </div>
+      <button class="btn btn-primary" id="btnImportNow" onclick="triggerDriveImport()">
+        <span id="importBtnIcon">▶</span> <span id="importBtnText">Import Now</span>
+      </button>
+    </div>
+  </div>
 
-    <!-- Header Block -->
-    <section class="page-header">
-      <div class="title-block">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <h1>Import Transactions</h1>
-          <span class="badge" style="background:var(--finny-primary-tint); color:var(--finny-primary); font-size:11px; padding:2px 8px; border-radius:var(--radius-pill); font-weight:700;">Beta</span>
+  <!-- Main 2-Column Workspace Grid -->
+  <main class="import-workspace-layout">
+
+    <!-- LEFT STAGING AREA -->
+    <section class="import-main-stage">
+
+      <!-- Filter / Search Toolbar -->
+      <div class="import-toolbar">
+        <div class="import-search-box">
+          <span style="color:var(--text-muted); font-size:13px;">🔍</span>
+          <input type="text" id="stageSearchInput" placeholder="Search payee, remarks, amount..." />
         </div>
-        <p>Review and approve imported transactions from Bluecoins. Edit details if needed, then add them to your accounts.</p>
+
+        <div class="import-filter-controls">
+          <select id="stageFilterAccount" class="panel-select">
+            <option value="ALL">All Accounts</option>
+          </select>
+          <select id="stageFilterCategory" class="panel-select">
+            <option value="ALL">All Categories</option>
+          </select>
+          <select id="stageFilterType" class="panel-select">
+            <option value="ALL">All Types</option>
+            <option value="Expense">Expense</option>
+            <option value="Income">Income</option>
+            <option value="Transfer">Transfer</option>
+          </select>
+        </div>
       </div>
 
-      <div class="header-actions">
-        <button class="btn btn-primary" id="btnImportNow" onclick="triggerDriveImport()">
-          <span id="importBtnIcon">▶</span> <span id="importBtnText">Import Now</span>
-        </button>
+      <!-- Bulk Selection Banner (Hidden by default) -->
+      <div id="bulkActionBar" class="bulk-action-bar" style="display: none;">
+        <span id="bulkSelectedCount">0 transactions selected</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary" onclick="approveSelectedStaged()">Approve Selected</button>
+          <button class="btn btn-secondary" onclick="deleteSelectedStaged()">Reject Selected</button>
+        </div>
       </div>
+
+      <!-- Staged Transactions Container (Grouped by Account or Empty State) -->
+      <div class="staging-groups-list" id="stagingGroupsContainer">
+        <div class="empty-staging-card">
+          <span style="font-size:36px;">✅</span>
+          <h3>All Caught Up!</h3>
+          <p>No staged transactions require review. Click <strong>▶ Import Now</strong> to pull the latest statement.</p>
+        </div>
+      </div>
+
     </section>
 
-    <!-- 80/20 Layout Grid -->
-    <div class="import-workspace-layout">
+    <!-- RIGHT FIXED DOCKED SIDEBAR: EDITOR & HISTORY -->
+    <aside class="import-side-panel">
 
-      <!-- LEFT: STAGING TRANSACTION WORKSPACE (~78%) -->
-      <section class="import-main-stage">
-        
-        <!-- Filter Bar -->
-        <div class="import-toolbar">
-          <div class="import-search-box">
-            <span style="color:var(--text-muted); font-size:14px;">🔍</span>
-            <input type="text" id="stageSearchInput" placeholder="Search payee, description, amount..." />
+      <!-- Edit / Review Card -->
+      <div class="side-editor-card">
+        <div class="side-card-header">
+          <h3><span>📄</span> Edit Transaction (Staged)</h3>
+          <button class="close-details-btn" onclick="deselectCurrentTransaction()">✕</button>
+        </div>
+
+        <!-- Empty Prompt (When no row is selected) -->
+        <div class="editor-empty" id="editorEmptyState">
+          Select a staged transaction row on the left to review or edit its details.
+        </div>
+
+        <!-- Active Form (When row is selected) -->
+        <form id="editorActiveForm" class="editor-body" style="display: none;" onsubmit="event.preventDefault(); approveCurrentStaged();">
+          <input type="hidden" id="editStagedId" />
+
+          <!-- Amount -->
+          <div class="form-field">
+            <label>AMOUNT (₹) *</label>
+            <input type="number" step="0.01" id="edAmount" class="panel-input hero-amount-field" required />
           </div>
 
-          <div class="import-filter-controls">
-            <select id="stageFilterAccount" class="select-box">
-              <option value="ALL">All Accounts</option>
-            </select>
-            <select id="stageFilterCategory" class="select-box">
-              <option value="ALL">All Categories</option>
-            </select>
-            <select id="stageFilterType" class="select-box">
-              <option value="ALL">All Types</option>
+          <!-- Type Switcher -->
+          <div class="form-field">
+            <label>TYPE *</label>
+            <select id="edType" class="panel-select" onchange="handleFormTypeChange(this.value)">
               <option value="Expense">Expense</option>
               <option value="Income">Income</option>
               <option value="Transfer">Transfer</option>
             </select>
           </div>
-        </div>
 
-        <!-- Bulk Selection Action Banner -->
-        <div id="bulkActionBar" class="bulk-action-bar" style="display: none;">
-          <span id="bulkSelectedCount">0 selected</span>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-outline" style="padding:4px 10px; font-size:12px; color:var(--finny-expense); border-color:var(--finny-expense);" onclick="deleteSelectedStaged()">Delete Selected</button>
-            <button class="btn btn-primary" style="padding:4px 12px; font-size:12px;" onclick="approveSelectedStaged()">Approve Selected</button>
-          </div>
-        </div>
-
-        <!-- Account Grouped Staging Container -->
-        <div id="stagingGroupsContainer" class="staging-groups-list">
-          <div class="empty-staging-card">
-            <span style="font-size:32px;">📥</span>
-            <h3>No Staged Transactions</h3>
-            <p>Click <strong>▶ Import Now</strong> to fetch the latest statement from your Google Drive folder.</p>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- RIGHT STICKY SIDEBAR (~22%) -->
-      <aside class="import-side-panel">
-        
-        <!-- TOP: TRANSACTION EDITOR (~70%) -->
-        <div class="side-editor-card">
-          <div class="side-card-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span>📄</span>
-              <h3>Edit Transaction (Staged)</h3>
-            </div>
-            <button class="modal-close-btn" onclick="deselectCurrentTransaction()" title="Close editor">✕</button>
+          <!-- Account -->
+          <div class="form-field" id="edAccountGroup">
+            <label>ACCOUNT *</label>
+            <select id="edAccount" class="panel-select"></select>
           </div>
 
-          <!-- Empty State -->
-          <div id="editorEmptyState" class="editor-empty">
-            <p>Select a staged transaction row on the left to review or edit its details.</p>
+          <!-- Transfer Destination Account (Toggled only if Transfer) -->
+          <div class="form-field" id="edTransferToGroup" style="display: none;">
+            <label>TRANSFER TO ACCOUNT *</label>
+            <select id="edTransferToAccount" class="panel-select"></select>
           </div>
 
-          <!-- Active Form State -->
-          <div id="editorActiveForm" style="display: none;" class="editor-body">
-            <input type="hidden" id="editStagedId" />
-            
-            <div class="form-grid-2">
-              <div class="form-field">
-                <label>Date *</label>
-                <input type="date" id="edDate" class="form-input" />
-              </div>
-              <div class="form-field">
-                <label>Time</label>
-                <input type="time" id="edTime" class="form-input" step="1" />
-              </div>
-            </div>
+          <!-- Category -->
+          <div class="form-field" id="edCategoryGroup">
+            <label>CATEGORY</label>
+            <select id="edCategory" class="panel-select"></select>
+          </div>
 
+          <!-- Payee -->
+          <div class="form-field">
+            <label>PAYEE / DESCRIPTION *</label>
+            <input type="text" id="edPayee" class="panel-input" required />
+          </div>
+
+          <!-- Date & Time -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <div class="form-field">
-              <label>Description (From File) *</label>
-              <input type="text" id="edDescription" class="form-input" />
+              <label>DATE *</label>
+              <input type="date" id="edDate" class="panel-input" required />
             </div>
-
             <div class="form-field">
-              <label>Payee</label>
-              <input type="text" id="edPayee" class="form-input" placeholder="e.g. Swiggy, Amazon" />
-            </div>
-
-            <div class="form-field">
-              <label>Category</label>
-              <select id="edCategory" class="form-select"></select>
-            </div>
-
-            <div class="form-field">
-              <label>Account *</label>
-              <select id="edAccount" class="form-select"></select>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="form-field">
-                <label>Amount (₹) *</label>
-                <input type="number" id="edAmount" class="form-input" step="0.01" />
-              </div>
-              <div class="form-field">
-                <label>Type *</label>
-                <select id="edType" class="form-select">
-                  <option value="Expense">Expense</option>
-                  <option value="Income">Income</option>
-                  <option value="Transfer">Transfer</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-field">
-              <label>Notes</label>
-              <textarea id="edNotes" class="form-textarea" placeholder="Optional notes..."></textarea>
-            </div>
-
-            <!-- Metadata info -->
-            <div class="editor-source-box">
-              <div class="source-row">
-                <span class="text-muted">Source:</span>
-                <span id="edSourceFile" class="font-semibold" style="font-size:11px;">Statement.xlsx</span>
-              </div>
-              <div class="source-row">
-                <span class="text-muted">Hash ID:</span>
-                <span id="edHashId" style="font-family:monospace; font-size:10px; color:var(--text-muted); word-break:break-all;">—</span>
-              </div>
-            </div>
-
-            <div class="editor-actions-row">
-              <button class="action-icon-btn danger" style="width:36px; height:36px;" onclick="deleteCurrentStaged()" title="Delete Staged Transaction">🗑</button>
-              <button class="btn btn-primary" style="flex:1;" onclick="approveCurrentStaged()">✓ Approve</button>
+              <label>TIME</label>
+              <input type="time" step="1" id="edTime" class="panel-input" />
             </div>
           </div>
+
+          <!-- Notes -->
+          <div class="form-field">
+            <label>NOTES / REMARKS</label>
+            <textarea id="edNotes" class="panel-input" rows="2" placeholder="Optional notes..."></textarea>
+          </div>
+
+          <!-- Source File Meta Info -->
+          <div class="editor-source-box">
+            <div class="source-row">
+              <span>Source File:</span>
+              <strong id="edSourceFile">—</strong>
+            </div>
+            <div class="source-row">
+              <span>Hash ID:</span>
+              <span id="edHashId" style="font-family: monospace;">—</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="editor-actions-row">
+            <button type="submit" class="btn btn-primary flex-1">Approve & Post</button>
+            <button type="button" class="stage-icon-btn delete-btn" onclick="deleteCurrentStaged()" title="Reject & Delete">🗑️</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Bottom Recent Import Batches Card -->
+      <div class="side-history-card">
+        <div class="side-card-header">
+          <h3><span>🕒</span> Recent Imports</h3>
         </div>
-
-        <!-- BOTTOM: IMPORT HISTORY (~30%) -->
-        <div class="side-history-card">
-          <div class="side-card-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span>🕒</span>
-              <h3 style="font-size:13px;">Import History</h3>
-            </div>
-            <a href="#" style="font-size:11px; color:var(--finny-primary); text-decoration:none; font-weight:600;">View All</a>
-          </div>
-
-          <div id="importHistoryList" class="history-list-stream">
-            <div class="text-muted text-center" style="font-size:11px; padding:20px;">No imports yet.</div>
-          </div>
+        <div class="history-list-stream" id="importHistoryList">
+          <div class="text-muted text-center" style="font-size:11px; padding:20px;">No imports recorded.</div>
         </div>
+      </div>
 
-      </aside>
+    </aside>
 
-    </div>
   </main>
 
   <!-- Modular Scripts -->
   <script src="../js/supabaseClient.js"></script>
   <script src="../js/common.js"></script>
-  <script src="../js/import.js"></script>
+  <script src="../js/import.js?v=4.0"></script>
 </body>
 </html>

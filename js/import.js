@@ -1,5 +1,5 @@
 // ==========================================================================
-// FINNY IMPORT TRANSACTIONS ENGINE (PRODUCTION)
+// FINNY IMPORT TRANSACTIONS ENGINE (PRODUCTION & CONTINUOUS LEARNING)
 // ==========================================================================
 
 const APPS_SCRIPT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyVLP53wxl5cIvKIcWmyBwIZ26P3Tc2IMy8wu2mVf676EovOkHCgBdqg5MNTgL4KIdJ/exec';
@@ -12,7 +12,7 @@ const importState = {
   selectedStagedId: null,
   selectedStagedTxn: null,
   selectedCheckboxes: new Set(),
-  collapsedAccounts: new Set()
+  expandedAccounts: new Set()
 };
 
 // 1. Initialize Page
@@ -50,9 +50,11 @@ async function loadMasterData() {
 
   // Populate Editor Dropdowns
   const edAcc = document.getElementById('edAccount');
-  if (edAcc) {
-    edAcc.innerHTML = importState.accounts.map(a => `<option value="${a.id}">${a.name} (${a.account_number_masked || '****'})</option>`).join('');
-  }
+  const edToAcc = document.getElementById('edTransferToAccount');
+  const accOptions = importState.accounts.map(a => `<option value="${a.id}">${a.name} (${a.account_number_masked || '****'})</option>`).join('');
+  
+  if (edAcc) edAcc.innerHTML = accOptions;
+  if (edToAcc) edToAcc.innerHTML = accOptions;
 
   const edCat = document.getElementById('edCategory');
   if (edCat) {
@@ -96,7 +98,7 @@ async function loadImportHistory() {
   renderImportHistory();
 }
 
-// 4. Render Grouped Staging Table (with Finny Design System Components)
+// 4. Render Grouped Staging Table
 function renderStagedTransactions() {
   const container = document.getElementById('stagingGroupsContainer');
   if (!container) return;
@@ -110,6 +112,7 @@ function renderStagedTransactions() {
     const matchesQ = !query || 
       (t.description || '').toLowerCase().includes(query) || 
       (t.payee || '').toLowerCase().includes(query) || 
+      (t.remarks || '').toLowerCase().includes(query) || 
       String(t.amount).includes(query);
 
     const matchesAcc = accFilter === 'ALL' || t.account_id === accFilter;
@@ -148,7 +151,7 @@ function renderStagedTransactions() {
   container.innerHTML = '';
 
   Object.values(groups).forEach(grp => {
-    const isCollapsed = importState.collapsedAccounts.has(grp.accName);
+    const isExpanded = importState.expandedAccounts.has(grp.accName);
     const card = document.createElement('div');
     card.className = 'stage-account-card';
 
@@ -156,29 +159,29 @@ function renderStagedTransactions() {
 
     card.innerHTML = `
       <div class="stage-account-header" onclick="toggleAccountCollapse('${grp.accName}')">
-        <div class="stage-acc-left">
-          <input type="checkbox" ${allGroupSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectAccountGroup('${grp.accName}', this.checked)" />
-          <div class="stage-acc-icon">🏛️</div>
-          <h3>${grp.accName}</h3>
-          <span class="text-muted" style="font-size:12px;">${grp.accMasked ? `(${grp.accMasked})` : ''}</span>
-        </div>
-        <div class="stage-acc-right">
-          <span class="text-muted"><strong>${grp.txns.length}</strong> transaction(s)</span>
-          <button class="btn btn-outline" style="padding:4px 10px; font-size:11px;" onclick="event.stopPropagation(); approveAccountTransactions('${grp.accName}')">Approve All</button>
-          <span style="font-size:11px; color:var(--text-muted);">${isCollapsed ? '▶' : '▼'}</span>
-        </div>
-      </div>
+    <div class="stage-acc-left">
+      <input type="checkbox" ${allGroupSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectAccountGroup('${grp.accName}', this.checked)" />
+      <div class="stage-acc-icon">🏛️</div>
+      <h3>${grp.accName}</h3>
+      <span class="text-muted" style="font-size:12px;">${grp.accMasked ? `(${grp.accMasked})` : ''}</span>
+    </div>
+    <div class="stage-acc-right">
+      <span class="text-muted"><strong>${grp.txns.length}</strong> transaction(s)</span>
+      <button class="btn btn-outline" style="padding:4px 10px; font-size:11px;" onclick="event.stopPropagation(); approveAccountTransactions('${grp.accName}')">Approve All</button>
+      <span style="font-size:11px; color:var(--text-muted);">${isExpanded ? '▼' : '▶'}</span>
+    </div>
+  </div>
 
-      <div class="stage-account-body" style="display:${isCollapsed ? 'none' : 'block'};">
+  <div class="stage-account-body" style="display:${isExpanded ? 'block' : 'none'};">
+    <table class="stage-txns-table">
         <table class="stage-txns-table">
           <thead>
             <tr>
               <th width="32"></th>
               <th width="120">Date & Time</th>
-              <th>Description (From File)</th>
-              <th>Payee</th>
+              <th>Payee / Remarks</th>
               <th>Category</th>
-              <th class="text-right">Amount (₹)</th>
+              <th class="text-right">Amount</th>
               <th class="text-center" width="80">Type</th>
               <th class="text-right" width="90">Actions</th>
             </tr>
@@ -188,6 +191,15 @@ function renderStagedTransactions() {
               const catObj = importState.categories.find(c => c.id === t.category_id);
               const isChecked = importState.selectedCheckboxes.has(t.id);
               const isSelected = importState.selectedStagedId === t.id;
+              const isTransfer = t.type === 'Transfer';
+
+              const amtNum = Math.abs(Number(t.amount || 0));
+              const formattedAmt = (typeof window.formatINR === 'function')
+                ? window.formatINR(amtNum).replace('₹', '').trim()
+                : amtNum.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+              const sign = t.amount < 0 ? '- ' : '+ ';
+              const amountClass = isTransfer ? 'transfer-val' : (t.amount >= 0 ? 'income-val' : 'expense-val');
 
               return `
                 <tr class="${isSelected ? 'selected-stage-row' : ''}" onclick="selectTransactionToEdit('${t.id}')">
@@ -198,13 +210,15 @@ function renderStagedTransactions() {
                     <strong>${t.date}</strong><br>
                     <span class="text-muted" style="font-size:11px;">${t.time || '—'}</span>
                   </td>
-                  <td><strong>${t.description || '—'}</strong></td>
-                  <td>${t.payee || '<span class="text-muted">Not assigned</span>'}</td>
                   <td>
-                    <span class="cat-pill">${catObj ? catObj.name : 'Uncategorized'}</span>
+                    <strong>${t.payee || t.description || 'Untitled'}</strong><br>
+                    <span class="text-muted" style="font-size:11px;">${t.remarks || t.notes || 'No remarks'}</span>
                   </td>
-                  <td class="text-right ${Number(t.amount) >= 0 ? 'income-val' : 'expense-val'}">
-                    <strong>${Number(t.amount) >= 0 ? '+' : ''}${window.formatINR(t.amount)}</strong>
+                  <td>
+                    <span class="cat-pill">${catObj ? catObj.name : (isTransfer ? 'Transfer' : 'Uncategorized')}</span>
+                  </td>
+                  <td class="text-right ${amountClass}">
+                    <strong>${sign}₹${formattedAmt}</strong>
                   </td>
                   <td class="text-center">
                     <span class="type-pill ${t.type ? t.type.toLowerCase() : 'expense'}">${t.type || 'Expense'}</span>
@@ -216,7 +230,6 @@ function renderStagedTransactions() {
                       <button class="stage-icon-btn delete-btn" onclick="deleteSingleTransaction('${t.id}')" title="Delete">🗑</button>
                     </div>
                   </td>
-                  
                 </tr>
               `;
             }).join('')}
@@ -250,11 +263,19 @@ window.selectTransactionToEdit = function(id) {
   document.getElementById('edAccount').value = t.account_id || (importState.accounts[0]?.id || '');
   document.getElementById('edAmount').value = Math.abs(t.amount);
   document.getElementById('edType').value = t.type || (t.amount >= 0 ? 'Income' : 'Expense');
-  document.getElementById('edNotes').value = t.notes || '';
+  document.getElementById('edNotes').value = t.remarks || t.notes || '';
   document.getElementById('edSourceFile').textContent = t.source_file || 'Statement.xlsx';
   document.getElementById('edHashId').textContent = t.hash_id || '—';
 
+  handleFormTypeChange(document.getElementById('edType').value);
   renderStagedTransactions();
+};
+
+window.handleFormTypeChange = function(type) {
+  const transferToGroup = document.getElementById('edTransferToGroup');
+  if (transferToGroup) {
+    transferToGroup.style.display = (type === 'Transfer') ? 'flex' : 'none';
+  }
 };
 
 window.deselectCurrentTransaction = function() {
@@ -265,35 +286,96 @@ window.deselectCurrentTransaction = function() {
   renderStagedTransactions();
 };
 
-// 6. Approve Single Staged Transaction (Passes Exact Hash ID into Transactions)
+// 6. Continuous Merchant Memory Learner
+async function upsertMerchantMemory(payee, categoryId, type) {
+  if (!payee || !categoryId) return;
+  try {
+    await window.db.from('merchant_memory').upsert({
+      payee: payee.trim().toLowerCase(),
+      category_id: categoryId,
+      default_type: type || 'Expense',
+      last_used_at: new Date().toISOString()
+    }, { onConflict: 'payee' });
+  } catch (err) {
+    console.warn('Notice: Merchant memory learning skipped:', err.message);
+  }
+}
+
+// 7. Approve Single Staged Transaction (via RPC or Paired Transfer)
 window.approveSingleTransaction = async function(id) {
   const t = importState.stagedTransactions.find(x => x.id === id);
   if (!t) return;
 
   try {
-    const { error: insErr } = await window.db.from('transactions').insert([{
-      date: t.date,
-      time: t.time || null,
-      amount: t.amount,
-      description: t.payee ? `${t.payee} (${t.description})` : t.description,
-      type: t.type,
-      account_id: t.account_id,
-      category_id: t.category_id,
-      notes: t.notes || t.remarks || null, // <-- Saved to ledger
-      hash_id: t.hash_id
-    }]);
+    const isTransfer = t.type === 'Transfer';
 
-    if (insErr) console.warn(insErr.message);
+    if (isTransfer) {
+      const destAcc = importState.accounts.find(a => 
+        a.id !== t.account_id && (a.name.toLowerCase().includes('upi lite') || a.name.toLowerCase().includes('kotak'))
+      );
 
-    await window.db.from('staged_transactions').delete().eq('id', id);
+      const amountVal = Math.abs(Number(t.amount));
+
+      // 1. Generate sequential TXN IDs via database sequence
+      const { data: legOutId } = await window.db.rpc('fn_generate_txn_id');
+      const { data: legInId } = await window.db.rpc('fn_generate_txn_id');
+
+      // 2. Insert paired legs with source = 'Import'
+      const { error: insErr } = await window.db.from('transactions').insert([
+        {
+          id: legOutId,
+          date: t.date,
+          time: t.time || '12:00:00',
+          title: t.payee || 'Transfer Out',
+          amount: -amountVal,
+          type: 'Transfer',
+          account_id: t.account_id,
+          category_id: null,
+          notes: t.remarks || t.notes || null,
+          hash_id: t.hash_id,
+          source: 'Import',
+          transfer_pair_id: legInId
+        },
+        {
+          id: legInId,
+          date: t.date,
+          time: t.time || '12:00:00',
+          title: t.payee || 'Transfer In',
+          amount: amountVal,
+          type: 'Transfer',
+          account_id: destAcc ? destAcc.id : t.account_id,
+          category_id: null,
+          notes: t.remarks || t.notes || null,
+          hash_id: t.hash_id,
+          source: 'Import',
+          transfer_pair_id: legOutId
+        }
+      ]);
+
+      if (insErr) throw insErr;
+      await window.db.from('staged_transactions').delete().eq('id', id);
+
+    } else {
+      // Direct call to atomic RPC (handles sequence ID, source='Import', & merchant memory)
+      const { error: rpcErr } = await window.db.rpc('fn_approve_staged_transaction', {
+        p_staged_id: t.id,
+        p_final_title: t.payee || t.description || 'Untitled',
+        p_final_category_id: t.category_id || null,
+        p_final_account_id: t.account_id
+      });
+
+      if (rpcErr) throw rpcErr;
+    }
+
     if (importState.selectedStagedId === id) deselectCurrentTransaction();
     await loadStagedTransactions();
+
   } catch (err) {
     alert('Failed to approve transaction: ' + err.message);
   }
 };
 
-// 7. Approve from Right Editor (With User-Edited Values)
+// 8. Approve from Right Editor
 window.approveCurrentStaged = async function() {
   const id = document.getElementById('editStagedId').value;
   const t = importState.stagedTransactions.find(x => x.id === id);
@@ -301,48 +383,101 @@ window.approveCurrentStaged = async function() {
 
   const date = document.getElementById('edDate').value;
   const time = document.getElementById('edTime').value;
-  let amount = parseFloat(document.getElementById('edAmount').value) || 0;
   const type = document.getElementById('edType').value;
-  if (type === 'Expense' && amount > 0) amount = -amount;
-
+  let amount = Math.abs(parseFloat(document.getElementById('edAmount').value) || 0);
   const payee = document.getElementById('edPayee').value.trim();
-  const desc = document.getElementById('edDescription').value.trim();
   const account_id = document.getElementById('edAccount').value;
   const category_id = document.getElementById('edCategory').value || null;
-  const notes = document.getElementById('edNotes').value.trim(); // <-- Reads edited or initial remarks
+  const notes = document.getElementById('edNotes').value.trim();
 
   try {
-    const { error: insErr } = await window.db.from('transactions').insert([{
-      date,
-      time: time || null,
-      amount,
-      description: payee ? `${payee} (${desc})` : desc,
-      type,
-      account_id,
-      category_id,
-      notes: notes || null, // <-- Saved to ledger
-      hash_id: t.hash_id
-    }]);
+    if (type === 'Transfer') {
+      const destAccountId = document.getElementById('edTransferToAccount').value;
+      if (account_id === destAccountId) {
+        alert('Source and destination accounts must be different for a transfer.');
+        return;
+      }
 
-    if (insErr) console.warn(insErr.message);
+      const { data: legOutId } = await window.db.rpc('fn_generate_txn_id');
+      const { data: legInId } = await window.db.rpc('fn_generate_txn_id');
 
-    await window.db.from('staged_transactions').delete().eq('id', id);
+      const { error: insErr } = await window.db.from('transactions').insert([
+        {
+          id: legOutId,
+          date,
+          time: time || '12:00:00',
+          title: payee || 'Transfer Out',
+          amount: -amount,
+          type: 'Transfer',
+          account_id,
+          category_id: null,
+          notes: notes || null,
+          hash_id: t.hash_id,
+          source: 'Import',
+          transfer_pair_id: legInId
+        },
+        {
+          id: legInId,
+          date,
+          time: time || '12:00:00',
+          title: payee || 'Transfer In',
+          amount: amount,
+          type: 'Transfer',
+          account_id: destAccountId,
+          category_id: null,
+          notes: notes || null,
+          hash_id: t.hash_id,
+          source: 'Import',
+          transfer_pair_id: legOutId
+        }
+      ]);
+
+      if (insErr) throw insErr;
+      await window.db.from('staged_transactions').delete().eq('id', id);
+
+    } else {
+      // Update staged row first with user overrides if any, then approve via RPC
+      await window.db.from('staged_transactions').update({
+        date,
+        time: time || '12:00:00',
+        amount: (type === 'Expense') ? -amount : amount,
+        type,
+        notes
+      }).eq('id', id);
+
+      const { error: rpcErr } = await window.db.rpc('fn_approve_staged_transaction', {
+        p_staged_id: id,
+        p_final_title: payee || t.description || 'Untitled',
+        p_final_category_id: category_id,
+        p_final_account_id: account_id
+      });
+
+      if (rpcErr) throw rpcErr;
+    }
+
     deselectCurrentTransaction();
     await loadStagedTransactions();
+
   } catch (err) {
     alert('Approval failed: ' + err.message);
   }
 };
 
-// 8. Delete Staged Transaction
+// 9. Delete Staged Transaction (Now records into excluded_hashes via RPC)
 window.deleteSingleTransaction = async function(id) {
-  if (!confirm('Delete this staged transaction? It will not be added to your ledger.')) return;
+  if (!confirm('Reject this staged transaction? It will be permanently excluded from future imports.')) return;
   try {
-    await window.db.from('staged_transactions').delete().eq('id', id);
+    const { error } = await window.db.rpc('fn_reject_staged_transaction', {
+      p_staged_id: id,
+      p_reason: 'User rejected from staging UI'
+    });
+
+    if (error) throw error;
+
     if (importState.selectedStagedId === id) deselectCurrentTransaction();
     await loadStagedTransactions();
   } catch (err) {
-    alert('Failed to delete: ' + err.message);
+    alert('Failed to delete/reject: ' + err.message);
   }
 };
 
@@ -351,7 +486,7 @@ window.deleteCurrentStaged = function() {
   deleteSingleTransaction(id);
 };
 
-// 9. Account-Level Approval (Approve All in One Click)
+// 10. Account-Level Approval
 window.approveAccountTransactions = async function(accName) {
   const txns = importState.stagedTransactions.filter(t => {
     const accObj = importState.accounts.find(a => a.id === t.account_id);
@@ -361,54 +496,50 @@ window.approveAccountTransactions = async function(accName) {
 
   if (!confirm(`Approve all ${txns.length} transactions for ${accName}?`)) return;
 
-  const insertPayload = txns.map(t => ({
-    date: t.date,
-    time: t.time || null,
-    amount: t.amount,
-    description: t.payee ? `${t.payee} (${t.description})` : t.description,
-    type: t.type,
-    account_id: t.account_id,
-    category_id: t.category_id,
-    notes: t.notes || t.remarks || null,
-    hash_id: t.hash_id
-  }));
-
   try {
-    await window.db.from('transactions').insert(insertPayload);
-    const ids = txns.map(t => t.id);
-    await window.db.from('staged_transactions').delete().in('id', ids);
+    for (const t of txns) {
+      if (t.type === 'Transfer') {
+        await approveSingleTransaction(t.id);
+      } else {
+        await window.db.rpc('fn_approve_staged_transaction', {
+          p_staged_id: t.id,
+          p_final_title: t.payee || t.description || 'Untitled',
+          p_final_category_id: t.category_id || null,
+          p_final_account_id: t.account_id
+        });
+      }
+    }
     await loadStagedTransactions();
   } catch (err) {
     alert('Bulk approval error: ' + err.message);
   }
 };
 
-// 10. Manual "Import Now" Trigger (Polls Google Apps Script Endpoint)
+// 11. Trigger Ingestion via Apps Script
 window.triggerDriveImport = async function() {
   const btn = document.getElementById('btnImportNow');
   const icon = document.getElementById('importBtnIcon');
   const text = document.getElementById('importBtnText');
 
-  btn.disabled = true;
-  icon.textContent = '◌';
-  text.textContent = 'Importing latest file...';
+  if (btn) btn.disabled = true;
+  if (icon) icon.textContent = '◌';
+  if (text) text.textContent = 'Importing latest file...';
 
   try {
     await fetch(APPS_SCRIPT_WEBHOOK_URL, { mode: 'no-cors' });
   } catch (err) {
-    console.log('Dispatched import trigger to Google Apps Script.');
+    console.log('Import trigger dispatched.');
   } finally {
-    // Wait for the Google Apps Script execution to finish writing to Supabase
     setTimeout(async () => {
       await Promise.all([loadStagedTransactions(), loadImportHistory()]);
-      btn.disabled = false;
-      icon.textContent = '▶';
-      text.textContent = 'Import Now';
+      if (btn) btn.disabled = false;
+      if (icon) icon.textContent = '▶';
+      if (text) text.textContent = 'Import Now';
     }, 2800);
   }
 };
 
-// 11. Render Import History
+// 12. Render Import History
 function renderImportHistory() {
   const container = document.getElementById('importHistoryList');
   if (!container) return;
@@ -440,7 +571,7 @@ function renderImportHistory() {
   }).join('');
 }
 
-// 12. Bulk Selection Helpers
+// 13. Bulk Selection Helpers
 window.toggleTxnCheckbox = function(id, checked) {
   if (checked) importState.selectedCheckboxes.add(id);
   else importState.selectedCheckboxes.delete(id);
@@ -462,10 +593,10 @@ window.toggleSelectAccountGroup = function(accName, checked) {
 };
 
 window.toggleAccountCollapse = function(accName) {
-  if (importState.collapsedAccounts.has(accName)) {
-    importState.collapsedAccounts.delete(accName);
+  if (importState.expandedAccounts.has(accName)) {
+    importState.expandedAccounts.delete(accName);
   } else {
-    importState.collapsedAccounts.add(accName);
+    importState.expandedAccounts.add(accName);
   }
   renderStagedTransactions();
 };
@@ -488,21 +619,19 @@ window.approveSelectedStaged = async function() {
   const ids = Array.from(importState.selectedCheckboxes);
   const txns = importState.stagedTransactions.filter(t => ids.includes(t.id));
 
-  const insertPayload = txns.map(t => ({
-    date: t.date,
-    time: t.time || null,
-    amount: t.amount,
-    description: t.payee ? `${t.payee} (${t.description})` : t.description,
-    type: t.type,
-    account_id: t.account_id,
-    category_id: t.category_id,
-    notes: t.notes || t.remarks || null,
-    hash_id: t.hash_id
-  }));
-
   try {
-    await window.db.from('transactions').insert(insertPayload);
-    await window.db.from('staged_transactions').delete().in('id', ids);
+    for (const t of txns) {
+      if (t.type === 'Transfer') {
+        await approveSingleTransaction(t.id);
+      } else {
+        await window.db.rpc('fn_approve_staged_transaction', {
+          p_staged_id: t.id,
+          p_final_title: t.payee || t.description || 'Untitled',
+          p_final_category_id: t.category_id || null,
+          p_final_account_id: t.account_id
+        });
+      }
+    }
     importState.selectedCheckboxes.clear();
     await loadStagedTransactions();
   } catch (err) {
@@ -511,10 +640,15 @@ window.approveSelectedStaged = async function() {
 };
 
 window.deleteSelectedStaged = async function() {
-  if (!confirm('Delete selected staged transactions?')) return;
+  if (!confirm('Reject selected staged transactions? They will be permanently excluded from future imports.')) return;
   const ids = Array.from(importState.selectedCheckboxes);
   try {
-    await window.db.from('staged_transactions').delete().in('id', ids);
+    for (const id of ids) {
+      await window.db.rpc('fn_reject_staged_transaction', {
+        p_staged_id: id,
+        p_reason: 'User bulk rejected from staging UI'
+      });
+    }
     importState.selectedCheckboxes.clear();
     await loadStagedTransactions();
   } catch (err) {

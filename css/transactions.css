@@ -648,3 +648,110 @@
   .workspace-grid { grid-template-columns: 1fr; }
   .filter-sidebar { display: none; }
 }
+
+/* Quick Period Preset Selector */
+.period-select {
+  font-weight: 600;
+  cursor: pointer;
+  height: 38px;
+}
+
+/* In-Panel Form Layout */
+.details-form-state {
+  display: flex;
+  flex-direction: column;
+}
+
+#panelTxnForm {
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel-type-switcher {
+  display: flex;
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 3px;
+}
+
+.type-pill-btn {
+  flex: 1;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.type-pill-btn.active[data-type="Expense"] {
+  background: #ffffff;
+  color: #ef4444;
+  box-shadow: var(--shadow-sm);
+}
+.type-pill-btn.active[data-type="Income"] {
+  background: #ffffff;
+  color: #16a34a;
+  box-shadow: var(--shadow-sm);
+}
+.type-pill-btn.active[data-type="Transfer"] {
+  background: #ffffff;
+  color: #2563eb;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.panel-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.panel-input, .panel-select, .panel-textarea {
+  background-color: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+}
+
+.panel-input:focus, .panel-select:focus, .panel-textarea:focus {
+  border-color: var(--finny-primary);
+}
+
+.hero-amount-field {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.panel-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.panel-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}

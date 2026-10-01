@@ -30,7 +30,10 @@
         <a href="accounts.html" class="nav-item">Accounts</a>
         <a href="transactions.html" class="nav-item">Transactions</a>
         <a href="import.html" class="nav-item">Import</a>
-        <a href="reconcile.html" class="nav-item active">Reconcile</a>
+        <a href="reconcile.html" class="nav-item">Reconcile</a>
+        <a href="budget.html" class="nav-item">Budget</a>
+        <a href="loans.html" class="nav-item">Loans</a>
+        <a href="planner.html" class="nav-item">Planner</a>
         <a href="settings.html" class="nav-item">Settings</a>
       </nav>
     </div>
@@ -43,25 +46,25 @@
   <!-- Reconciliation Shell -->
   <main class="finny-shell">
 
-    <!-- Page Header & Info Banner -->
-    <section class="page-header">
+   <!-- Page Header & Info Banner -->
+    <section class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
       <div class="title-block">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <h1>Reconciliation</h1>
-          <span class="badge" style="background:var(--finny-primary-tint); color:var(--finny-primary); font-size:11px; padding:2px 8px; border-radius:var(--radius-pill); font-weight:700;">Beta</span>
+          <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Reconciliation</h1>
+          <span class="badge" style="background: var(--finny-primary-tint); color: var(--finny-primary); font-size: 11px; padding: 2px 8px; border-radius: var(--radius-pill); font-weight: 700;">Beta</span>
         </div>
-        <p>Verify and reconcile account balances to ensure your financial data is accurate.</p>
+        <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 13px;">Verify and reconcile account balances to ensure your financial data is accurate.</p>
       </div>
 
-      <div class="header-actions">
-        <div class="how-it-works-banner">
-          <span style="font-size: 18px;">💡</span>
-          <div>
-            <strong>How it works?</strong>
-            <p>Set your opening balance, then verify year-wise, month-wise, and day-wise balances.</p>
-          </div>
+      <div class="header-actions" style="display: flex; align-items: center; gap: 10px;">
+        <div class="date-range-control" style="display: flex; align-items: center; gap: 8px; background: var(--bg-surface); border: 1px solid var(--border); padding: 5px 12px; border-radius: var(--radius-md);">
+          <label for="recFilterStartDate" style="font-size: 11px; color: var(--text-muted); font-weight: 600;">From:</label>
+          <input type="date" id="recFilterStartDate" onchange="window.onReconcileDateChange()" style="border: none; background: transparent; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;" />
+          <span style="color: var(--border);">|</span>
+          <label for="recFilterEndDate" style="font-size: 11px; color: var(--text-muted); font-weight: 600;">To:</label>
+          <input type="date" id="recFilterEndDate" onchange="window.onReconcileDateChange()" style="border: none; background: transparent; color: var(--text-primary); font-size: 12px; outline: none; cursor: pointer;" />
         </div>
-        <button class="btn btn-secondary">More Actions ▾</button>
+        <button class="btn btn-secondary" onclick="window.resetReconcileDateRange()" style="padding: 6px 14px; font-size: 12px; cursor: pointer;">All Time</button>
       </div>
     </section>
 

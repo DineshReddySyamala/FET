@@ -1,0 +1,369 @@
+/* ==========================================================================
+   FINNY MONTHLY PLANNER MODULE — COMPACT & LIGHT THEME STYLESHEET
+   ========================================================================== */
+
+/* Page Header */
+.planner-page-header {
+  padding: 12px 32px 8px 32px;
+  flex-shrink: 0;
+}
+
+.planner-header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.planner-title-block h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.planner-title-block p {
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  margin: 2px 0 0 0;
+}
+
+.planner-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Year Navigator Pill */
+.year-navigator-pill {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.year-nav-arrow {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.year-nav-arrow:hover {
+  color: var(--finny-primary, #2563eb);
+}
+
+.year-nav-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  min-width: 50px;
+  text-align: center;
+}
+
+/* Master Fixed Scroll Shell */
+.planner-workspace-shell {
+  padding: 0 32px 24px 32px;
+  height: calc(100vh - 110px);
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   1. SLIM & COMPACT TOP KPI CARDS (50% REDUCED HEIGHT)
+   ========================================================================== */
+.planner-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.planner-kpi-card {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.kpi-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.bg-tint-green { background: #f0fdf4; color: #16a34a; }
+.bg-tint-red { background: #fef2f2; color: #dc2626; }
+.bg-tint-blue { background: #eff6ff; color: #2563eb; }
+.bg-tint-purple { background: #faf5ff; color: #9333ea; }
+
+.kpi-info-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.kpi-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-value {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin: 1px 0 0 0;
+  line-height: 1.2;
+}
+
+.kpi-subtext {
+  font-size: 10px;
+  color: var(--text-muted, #94a3b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-purple { color: #9333ea; }
+
+/* ==========================================================================
+   2. MATRIX CARD & TABLE
+   ========================================================================== */
+.planner-matrix-card {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card, 0 10px 25px -4px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.03));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.matrix-table-scroll {
+  overflow: auto;
+  flex: 1;
+  max-height: calc(100vh - 210px);
+}
+
+.planner-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.planner-matrix-table th,
+.planner-matrix-table td {
+  padding: 7px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border-subtle, #f1f5f9);
+  vertical-align: middle;
+}
+
+.planner-matrix-table thead th {
+  background: #f8fafc;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Sticky Category Column (Left) */
+.col-sticky-cat {
+  position: sticky;
+  left: 0;
+  background: #ffffff;
+  z-index: 5;
+  width: 250px;
+  min-width: 250px;
+  border-right: 1px solid var(--border, #e2e8f0);
+}
+
+.planner-matrix-table thead th.col-sticky-cat {
+  background: #f8fafc;
+  z-index: 15;
+}
+
+/* Sticky Total Column (Right) */
+.col-sticky-total {
+  position: sticky;
+  right: 0;
+  background: #ffffff;
+  z-index: 5;
+  width: 110px;
+  min-width: 110px;
+  border-left: 1px solid var(--border, #e2e8f0);
+  font-weight: 700;
+}
+
+.planner-matrix-table thead th.col-sticky-total {
+  background: #f8fafc;
+  z-index: 15;
+}
+
+.col-month {
+  min-width: 76px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Header Sections (Income / Expenses) */
+.matrix-sec-header-row td {
+  font-weight: 700;
+  font-size: 12px;
+  border-top: 1px solid var(--border, #e2e8f0);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  cursor: pointer;
+  user-select: none;
+}
+
+.matrix-sec-header-row.income-hdr td {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+.matrix-sec-header-row.income-hdr .col-sticky-cat,
+.matrix-sec-header-row.income-hdr .col-sticky-total {
+  background: #f0fdf4;
+}
+
+.matrix-sec-header-row.expense-hdr td {
+  background: #fef2f2;
+  color: #dc2626;
+}
+.matrix-sec-header-row.expense-hdr .col-sticky-cat,
+.matrix-sec-header-row.expense-hdr .col-sticky-total {
+  background: #fef2f2;
+}
+
+/* Sub-group Rows (Fixed, Variable, Yearly) */
+.matrix-grp-row td {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #334155;
+  border-top: 1px solid #f1f5f9;
+  cursor: pointer;
+  user-select: none;
+}
+.matrix-grp-row .col-sticky-cat,
+.matrix-grp-row .col-sticky-total {
+  background: #f8fafc;
+}
+
+.matrix-grp-row:hover td {
+  background: #f1f5f9;
+}
+
+.matrix-toggle-arrow {
+  display: inline-block;
+  width: 14px;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+/* Item Rows */
+.matrix-item-row:hover td {
+  background: #fafcff;
+}
+.matrix-item-row:hover .col-sticky-cat,
+.matrix-item-row:hover .col-sticky-total {
+  background: #fafcff;
+}
+
+.matrix-item-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 20px;
+}
+
+.matrix-item-icon {
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   3. LIGHT-THEME BALANCE OF MONTH ROW
+   ========================================================================== */
+.matrix-net-foot-row th,
+.matrix-net-foot-row td {
+  background: #ffffff !important;
+  color: var(--text-primary, #0f172a);
+  padding: 10px 12px;
+  position: sticky;
+  bottom: 0;
+  z-index: 12;
+  border-top: 2px solid var(--border, #cbd5e1);
+  box-shadow: 0 -4px 6px -1px rgba(15, 23, 42, 0.04);
+}
+
+.matrix-net-foot-row .col-sticky-cat {
+  background: #ffffff !important;
+  color: var(--text-primary, #0f172a);
+  z-index: 18;
+}
+
+.matrix-net-foot-row .col-sticky-total {
+  background: #ffffff !important;
+  color: var(--text-primary, #0f172a);
+  z-index: 18;
+}
+
+.net-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: -0.2px;
+}
+
+.net-pill.positive {
+  background: #ecfdf5;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.net-pill.negative {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.net-pill.neutral {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+@media (max-width: 1200px) {
+  .planner-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
