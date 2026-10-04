@@ -11,7 +11,7 @@ const accountsEngine = {
   selectedAccountId: null,
   activeTab: 'Transactions',
   currentDateFilter: 'last_6_months',
-  importDateFilter: 'ALL',
+  importDateFilter: 'last_6_months',
   
   mergedTimeline: [],
   selectedDrawerItem: null,
@@ -236,14 +236,29 @@ async function loadAccountsHierarchy(silent = false) {
   const db = getDbClient();
   if (!db) return;
 
-  const { data: accountsList, error: aErr } = await db.from('accounts').select('*').order('name');
-  if (aErr || !accountsList) return;
+  try {
+    const [{ data: accountsList, error: aErr }, { data: balancesList }] = await Promise.all([
+      db.from('accounts').select('*').order('name'),
+      db.from('v_account_balances').select('id, current_balance, transaction_count')
+    ]);
+    if (aErr || !accountsList) return;
 
-  accountsEngine.accounts = accountsList;
+    const balMap = {};
+    if (balancesList) {
+      balancesList.forEach(b => {
+        balMap[b.id] = Number(b.current_balance || 0);
+      });
+    }
 
-  // Render tree DOM fully only on initial load or non-silent refresh
-  if (!silent || !document.getElementById('assetsDynamicGroups')?.hasChildNodes()) {
-    renderHierarchyTree();
+    accountsList.forEach(a => {
+      a.current_balance = balMap[a.id] !== undefined ? balMap[a.id] : Number(a.opening_balance || 0);
+    });
+
+    accountsEngine.accounts = accountsList;
+
+    // Render tree DOM fully only on initial load or non-silent refresh
+    if (!silent || !document.getElementById('assetsDynamicGroups')?.hasChildNodes()) {
+      renderHierarchyTree();
 
     const accOptions = accountsEngine.accounts
       .map(a => `<option value="${a.id}">${a.name} (${a.account_number_masked ? a.account_number_masked.slice(-4) : '****'})</option>`)
@@ -274,6 +289,9 @@ async function loadAccountsHierarchy(silent = false) {
   if (defaultAcc && !accountsEngine.selectedAccountId) {
     selectAccount(defaultAcc.id);
   }
+} catch (err) {
+  console.error('[Finny] Error loading accounts hierarchy:', err);
+}
 }
 
 function updateSidebarBalancesOnly() {
@@ -443,6 +461,16 @@ window.selectAccount = async function(accId) {
   const curBal = Number(acc.current_balance || acc.opening_balance || 0);
   document.getElementById('heroCurrentBalance').textContent = (curBal < 0 ? '-₹' : '₹') + formatCurrency(curBal);
 
+  const formBalEl = document.getElementById('txnFormAccountBalanceAmt');
+  const formNameEl = document.getElementById('txnFormAccountBalanceName');
+  if (formBalEl) formBalEl.textContent = formatBalanceINR(curBal);
+  if (formNameEl) formNameEl.textContent = acc.name;
+
+  const viewBalEl = document.getElementById('txnViewAccountBalanceAmt');
+  const viewNameEl = document.getElementById('txnViewAccountBalanceName');
+  if (viewBalEl) viewBalEl.textContent = formatBalanceINR(curBal);
+  if (viewNameEl) viewNameEl.textContent = acc.name;
+
   let bg = accountsEngine.bankColors.default;
   const nameLow = acc.name.toLowerCase();
   for (let key in accountsEngine.bankColors) {
@@ -542,27 +570,49 @@ async function loadAccountTransactions(isSilent = false, autoExpandYM = null) {
 
   const range = getDateRange(accountsEngine.currentDateFilter);
 
-  // Directly fetch from 'transactions' to eliminate slow fallback delays
-  let query = db
-    .from('transactions')
-    .select('*, categories(name)')
-    .eq('account_id', accId)
-    .order('date', { ascending: false })
-    .order('time', { ascending: false })
-    .order('id', { ascending: false });
+  let allTxns = [];
+  let from = 0;
+  const pageSize = 1000;
+  let hasMore = true;
 
-  if (range) query = query.gte('date', range.start).lte('date', range.end);
-  const { data: txns, error } = await query;
+  try {
+    while (hasMore) {
+      let query = db
+        .from('v_transactions')
+        .select('*')
+        .eq('account_id', accId)
+        .order('date', { ascending: false })
+        .order('time', { ascending: false })
+        .order('id', { ascending: false })
+        .range(from, from + pageSize - 1);
 
-  if (error) {
-    console.error('[Finny] Fetch error:', error);
-    if (!isSilent) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:#ef4444;">Error loading transactions.</td></tr>`;
+      if (range) query = query.gte('date', range.start).lte('date', range.end);
+      const { data, error } = await query;
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        allTxns = allTxns.concat(data);
+        if (data.length < pageSize) hasMore = false;
+        else from += pageSize;
+      } else {
+        hasMore = false;
+      }
     }
-    return;
+  } catch (err) {
+    console.warn('[Finny] v_transactions fetch warning, falling back to transactions table:', err);
+    let fallbackQuery = db
+      .from('transactions')
+      .select('*, categories(name)')
+      .eq('account_id', accId)
+      .order('date', { ascending: false })
+      .order('time', { ascending: false })
+      .order('id', { ascending: false });
+    if (range) fallbackQuery = fallbackQuery.gte('date', range.start).lte('date', range.end);
+    const { data: fTxns } = await fallbackQuery;
+    allTxns = fTxns || [];
   }
 
-  accountsEngine.currentTxnsList = txns || [];
+  accountsEngine.currentTxnsList = allTxns;
 
   if (accountsEngine.currentTxnsList.length === 0) {
     tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:#64748b;">No transactions found for this period.</td></tr>`;
@@ -670,8 +720,18 @@ async function loadAccountTransactions(isSilent = false, autoExpandYM = null) {
         const amtVal = Number(t.amount || 0);
         const sign = isIncome ? '+ ' : '- ';
         const amtClass = isIncome ? 'income-val' : (isTransfer ? 'transfer-val' : 'expense-val');
-        const displayTitle = t.title || t.payee || 'Untitled';
-        const catName = t.categories?.name || accountsEngine.categories[t.category_id] || (isTransfer ? 'Transfer' : 'General');
+        const displayTitle = t.title || 'Untitled';
+        let displayPayee = t.payee_name || t.payee || '';
+        if (!displayPayee && t.payee_id && window.FinnyCategoryLearner) {
+          const pObj = window.FinnyCategoryLearner.knownPayees.find(p => p.id === t.payee_id);
+          if (pObj) displayPayee = pObj.name;
+        }
+        if (!displayPayee && t.notes && t.notes.startsWith('Payee: ')) {
+          displayPayee = t.notes.split('\n')[0].replace('Payee: ', '').trim();
+        }
+        if (!displayPayee) displayPayee = '—';
+
+        const catName = t.category_name || t.categories?.name || accountsEngine.categories[t.category_id] || (isTransfer ? 'Transfer' : 'General');
         const catDesign = accountsEngine.categoryColors[catName.toLowerCase()] || accountsEngine.categoryColors.default;
         const isSelected = accountsEngine.selectedTxnTabItem && String(accountsEngine.selectedTxnTabItem.id) === String(t.id);
 
@@ -680,7 +740,7 @@ async function loadAccountTransactions(isSilent = false, autoExpandYM = null) {
             <td onclick="event.stopPropagation()"><input type="checkbox" /></td>
             <td>${t.time ? String(t.time).slice(0, 5) : '12:00'}</td>
             <td><strong>${displayTitle}</strong></td>
-            <td>${displayTitle}</td>
+            <td>${displayPayee}</td>
             <td>
               <span class="cat-pill-badge" style="background:${catDesign.bg}; color:${catDesign.color};">
                 <span>${catDesign.icon}</span> ${catName}
@@ -751,6 +811,244 @@ window.toggleAllTransactionMonths = function() {
 };
 
 // ==========================================================================
+// UNIFIED TRANSACTION DETAILS CARD CONTROLLER (SHARED BY TAB 1 & TAB 2)
+// ==========================================================================
+window.populateUnifiedDetailsCard = function(prefix, item, callbacks = {}) {
+  if (!item) return;
+
+  // 1. Category and palette
+  const rawCat = accountsEngine.categories[item.categoryId || item.category_id];
+  const catName = (typeof rawCat === 'object' ? rawCat?.name : rawCat) || item.category_name || (item.type === 'Transfer' ? 'Transfer' : 'General');
+  const design = (window.getCategoryDesign ? window.getCategoryDesign(catName) : { icon: '🏷️', bg: '#f1f5f9', color: '#475569' });
+
+  // 2. Avatar
+  const avatarId = prefix === 'txn' ? 'txnTabAvatar' : 'impAvatar';
+  const avatarEl = document.getElementById(avatarId);
+  if (avatarEl) {
+    avatarEl.textContent = design.icon;
+    avatarEl.style.backgroundColor = design.bg;
+    avatarEl.style.color = design.color;
+  }
+
+  // 3. Payee Headline & Subtitle
+  const payeeTitle = item.title || item.payee || item.description || 'Transaction Details';
+  const titleId = prefix === 'txn' ? 'txnViewTitle' : 'impPayee';
+  const titleEl = document.getElementById(titleId);
+  if (titleEl) titleEl.textContent = payeeTitle;
+
+  const dateStr = item.date ? sanitizeDateString(item.date) : '';
+  const timeStr = item.time ? String(item.time).slice(0, 8) : '';
+  const dtSubtitle = `${dateStr}${timeStr ? ', ' + timeStr : ''}`;
+  const dtId = prefix === 'txn' ? 'txnViewDateTime' : 'impDateTime';
+  const dtEl = document.getElementById(dtId);
+  if (dtEl) dtEl.textContent = dtSubtitle;
+
+  // 4. Hero Amount
+  const amt = Number(item.amount || 0);
+  const isExp = amt < 0 || (item.type === 'Expense');
+  const amtDisplay = (amt < 0 ? '- ₹' : (amt > 0 ? '+ ₹' : '₹')) + Math.abs(amt).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+  const amtId = prefix === 'txn' ? 'txnViewAmount' : 'impAmount';
+  const amtEl = document.getElementById(amtId);
+  if (amtEl) {
+    amtEl.textContent = amtDisplay;
+    amtEl.style.color = (item.type === 'Income' || (!isExp && amt > 0)) ? 'var(--finny-income, #16a34a)' : 'var(--finny-expense, #dc2626)';
+  }
+
+  // Helper to safely set text
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+
+  // 5. Payee & Description Fields
+  const descText = item.title || item.description || '—';
+  let payeeName = item.payee_name || item.payee || '';
+  if (!payeeName && item.payee_id && window.FinnyCategoryLearner) {
+    const pObj = window.FinnyCategoryLearner.knownPayees.find(p => p.id === item.payee_id);
+    if (pObj) payeeName = pObj.name;
+  }
+  let extraNotes = item.notes || '';
+  if (extraNotes.startsWith('Payee: ')) {
+    const lines = extraNotes.split('\n');
+    if (!payeeName) payeeName = lines[0].replace('Payee: ', '').trim();
+    extraNotes = lines.slice(1).join('\n').trim();
+  }
+  if (!payeeName) payeeName = '—';
+
+  const fPayee = prefix === 'txn' ? 'txnDetPayee' : 'impFieldPayee';
+  setText(fPayee, payeeName);
+
+  const fDesc = prefix === 'txn' ? 'txnDetDescription' : 'impFieldDescription';
+  setText(fDesc, descText);
+
+  // 7. Category Field
+  const fCat = prefix === 'txn' ? 'txnDetCategory' : 'impFieldCategory';
+  setText(fCat, catName);
+
+  // 8. Account / From & To Accounts
+  const acc = accountsEngine.accounts.find(a => String(a.id) === String(item.account_id || accountsEngine.selectedAccountId));
+  const accName = acc ? acc.name : 'Current Account';
+
+  const rowSingle = document.getElementById(prefix === 'txn' ? 'txnDetRowSingleAccount' : 'impRowSingleAccount');
+  const rowFrom = document.getElementById(prefix === 'txn' ? 'txnDetRowFromAccount' : 'impRowFromAccount');
+  const rowTo = document.getElementById(prefix === 'txn' ? 'txnDetRowToAccount' : 'impRowToAccount');
+  const fSingle = prefix === 'txn' ? 'txnDetAccount' : 'impFieldAccount';
+  const fFrom = prefix === 'txn' ? 'txnDetFromAccount' : 'impFieldFromAccount';
+  const fTo = prefix === 'txn' ? 'txnDetToAccount' : 'impFieldToAccount';
+
+  const setHighlight = (id, text, type = 'single') => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (type === 'from') {
+      el.innerHTML = `<span class="det-val-highlight from-acc">📤 ${text}</span>`;
+    } else if (type === 'to') {
+      el.innerHTML = `<span class="det-val-highlight to-acc">📥 ${text}</span>`;
+    } else {
+      el.innerHTML = `<span class="det-val-highlight">🏛️ ${text}</span>`;
+    }
+  };
+
+  if (item.type === 'Transfer') {
+    if (rowSingle) rowSingle.style.display = 'none';
+    if (rowFrom) rowFrom.style.display = 'flex';
+    if (rowTo) rowTo.style.display = 'flex';
+
+    let partnerName = 'Transfer Partner';
+    const partnerTxn = (accountsEngine.currentTxnsList || []).find(t => String(t.id) === String(item.transfer_pair_id))
+      || (accountsEngine.mergedTimeline || []).find(t => String(t.id) === String(item.transfer_pair_id));
+    if (partnerTxn) {
+      const pAcc = accountsEngine.accounts.find(a => String(a.id) === String(partnerTxn.account_id));
+      if (pAcc) partnerName = pAcc.name;
+    }
+
+    if (amt < 0) {
+      setHighlight(fFrom, accName, 'from');
+      setHighlight(fTo, partnerName, 'to');
+    } else {
+      setHighlight(fFrom, partnerName, 'from');
+      setHighlight(fTo, accName, 'to');
+    }
+
+    if (partnerName === 'Transfer Partner' && item.transfer_pair_id && window.db) {
+      window.db.from('transactions').select('account_id').eq('id', item.transfer_pair_id).single().then(({ data: pair }) => {
+        if (pair) {
+          const pAcc = accountsEngine.accounts.find(a => String(a.id) === String(pair.account_id));
+          const resolvedName = pAcc ? pAcc.name : 'Destination Account';
+          if (amt < 0) {
+            setHighlight(fTo, resolvedName, 'to');
+          } else {
+            setHighlight(fFrom, resolvedName, 'from');
+          }
+        }
+      });
+    }
+  } else {
+    if (rowSingle) rowSingle.style.display = 'flex';
+    if (rowFrom) rowFrom.style.display = 'none';
+    if (rowTo) rowTo.style.display = 'none';
+    setHighlight(fSingle, accName, 'single');
+  }
+
+  // 9. Date & Time
+  const fDT = prefix === 'txn' ? 'txnDetDateTime' : 'impFieldDateTime';
+  setText(fDT, `${dateStr} ${timeStr}`);
+
+  // 10. Type Badge
+  const fType = prefix === 'txn' ? 'txnDetType' : 'impFieldType';
+  const typeEl = document.getElementById(fType);
+  if (typeEl) {
+    typeEl.textContent = item.type || (amt < 0 ? 'Expense' : 'Income');
+    typeEl.className = 'badge badge-' + (item.type || 'Expense').toLowerCase();
+  }
+
+  // 11. Status
+  const fStatus = prefix === 'txn' ? 'txnDetStatus' : 'impFieldStatus';
+  const statusEl = document.getElementById(fStatus);
+  if (statusEl) {
+    if (item.isStaged) {
+      statusEl.innerHTML = '<span style="color:#d97706; font-weight:600;">● Review</span>';
+    } else {
+      statusEl.innerHTML = '<span style="color:#16a34a; font-weight:600;">● Completed</span>';
+    }
+  }
+
+  // 12. Balance After
+  const runBal = item.account_running_balance !== undefined ? item.account_running_balance : (item.running_balance !== undefined ? item.running_balance : item.projectedBalanceAfter);
+  const fBal = prefix === 'txn' ? 'txnDetBalanceAfter' : 'impFieldBalanceAfter';
+  setText(fBal, runBal !== undefined && runBal !== null ? formatBalanceINR(runBal) : '—');
+
+  // 13. Hash ID with click to copy
+  const hashVal = item.hash_id || (window.generateFinnyHashId ? window.generateFinnyHashId(item.date, item.time, item.amount) : '—');
+  const fHash = prefix === 'txn' ? 'txnDetHashId' : 'impFieldHashId';
+  const hashEl = document.getElementById(fHash);
+  if (hashEl) {
+    hashEl.textContent = hashVal;
+    hashEl.onclick = () => {
+      if (navigator.clipboard && hashVal && hashVal !== '—') {
+        navigator.clipboard.writeText(hashVal).then(() => {
+          const orig = hashEl.textContent;
+          hashEl.textContent = 'Copied! ✓';
+          setTimeout(() => { hashEl.textContent = orig; }, 1500);
+        });
+      }
+    };
+  }
+
+  // 14. Notes Row
+  const rowNotes = document.getElementById(prefix === 'txn' ? 'txnDetRowNotes' : 'impRowNotes');
+  const fNotes = prefix === 'txn' ? 'txnDetNotes' : 'impFieldNotes';
+  if (rowNotes) {
+    if (extraNotes) {
+      rowNotes.style.display = 'flex';
+      setText(fNotes, extraNotes);
+    } else {
+      rowNotes.style.display = 'none';
+    }
+  }
+
+  // 15. Actions: Edit, Duplicate, Delete
+  const btnEdit = document.getElementById(prefix === 'txn' ? 'btnEditTxnTab' : 'btnEditViewedTxn');
+  if (btnEdit) {
+    btnEdit.textContent = item.isStaged ? '✏️ Review & Edit' : '✏️ Edit';
+    if (callbacks.onEdit) btnEdit.onclick = callbacks.onEdit;
+  }
+
+  const btnDup = document.getElementById(prefix === 'txn' ? 'btnDupTxnTab' : 'btnDupViewedTxn');
+  if (btnDup) {
+    btnDup.onclick = () => {
+      if (prefix === 'txn') {
+        openNewTransactionDrawer(false, {
+          ...item,
+          id: undefined,
+          transfer_pair_id: undefined,
+          date: new Date().toISOString().split('T')[0],
+          time: new Date().toTimeString().split(' ')[0]
+        });
+      } else {
+        openAccountImportDrawer(item.id, Boolean(item.isStaged), true);
+      }
+    };
+  }
+
+  const btnDelete = document.getElementById(prefix === 'txn' ? 'btnDeleteTxnTab' : 'btnDeleteViewedTxn');
+  if (btnDelete) {
+    btnDelete.title = item.isStaged ? 'Reject Staged Entry' : 'Delete Transaction';
+    if (callbacks.onDelete) btnDelete.onclick = callbacks.onDelete;
+  }
+
+  // 16. Bottom Box: Balance After Card
+  const accBalName = document.getElementById(prefix === 'txn' ? 'txnViewAccountBalanceName' : 'impAccountBalanceName');
+  const accBalAmt = document.getElementById(prefix === 'txn' ? 'txnViewAccountBalanceAmt' : 'impAccountBalanceAmt');
+  const accTrend = document.getElementById(prefix === 'txn' ? 'txnViewAccountTrend' : 'impAccountTrend');
+  if (accBalName && acc) accBalName.textContent = acc.name;
+  if (accBalAmt) {
+    const balToDisplay = runBal !== undefined && runBal !== null ? runBal : (acc ? acc.current_balance : 0);
+    accBalAmt.textContent = formatBalanceINR(balToDisplay);
+  }
+  if (accTrend) accTrend.textContent = 'Active';
+};
+
+// ==========================================================================
 // TRANSACTIONS TAB DOCKED INSPECTOR CONTROLLER
 // ==========================================================================
 window.openTxnTabDrawer = function(txnId, forceEdit = false) {
@@ -768,32 +1066,11 @@ window.openTxnTabDrawer = function(txnId, forceEdit = false) {
   if (!forceEdit) {
     if (viewState) viewState.style.display = 'block';
     if (formState) formState.style.display = 'none';
-    renderRichCardDetails('txnViewDynamicContainer', item);
 
-    document.getElementById('txnViewTitle').textContent = item.title || item.payee || 'Transaction Details';
-    document.getElementById('txnViewDateTime').textContent = `${sanitizeDateString(item.date)} • ${item.time ? String(item.time).slice(0, 5) : '12:00'}`;
-
-    const amt = Number(item.amount || 0);
-    const amtEl = document.getElementById('txnViewAmount');
-    amtEl.textContent = (amt < 0 ? '-₹' : '+₹') + formatCurrency(Math.abs(amt));
-    amtEl.style.color = amt < 0 ? '#dc2626' : '#16a34a';
-
-    const typeBadge = document.getElementById('txnViewTypeBadge');
-    typeBadge.textContent = item.type || (amt < 0 ? 'Expense' : 'Income');
-    typeBadge.className = `type-pill-box ${(item.type || 'Expense').toLowerCase()}`;
-
-    const acc = accountsEngine.accounts.find(a => String(a.id) === String(item.account_id));
-    document.getElementById('txnViewAccount').textContent = acc ? acc.name : 'Current Account';
-
-    const catName = item.categories?.name || accountsEngine.categories[item.category_id] || (item.type === 'Transfer' ? 'Transfer' : 'General');
-    document.getElementById('txnViewCategory').textContent = catName;
-
-    const runBal = item.account_running_balance !== undefined ? item.account_running_balance : item.running_balance;
-    document.getElementById('txnViewBalanceAfter').textContent = runBal !== undefined ? formatBalanceINR(runBal) : '—';
-    document.getElementById('txnViewNotes').textContent = item.notes || 'No remarks';
-
-    document.getElementById('btnEditTxnTab').onclick = () => openTxnTabDrawer(item.id, true);
-    document.getElementById('btnDeleteTxnTab').onclick = () => deleteRecordedTxn(item.id);
+    populateUnifiedDetailsCard('txn', item, {
+      onEdit: () => openTxnTabDrawer(item.id, true),
+      onDelete: () => deleteRecordedTxn(item.id)
+    });
     return;
   }
 
@@ -808,7 +1085,16 @@ window.openTxnTabDrawer = function(txnId, forceEdit = false) {
   document.getElementById('txnTabTransferPairId').value = item.transfer_pair_id || '';
   document.getElementById('txnTabDate').value = sanitizeDateString(item.date);
   document.getElementById('txnTabTime').value = item.time ? String(item.time).slice(0, 8) : '12:00:00';
-  document.getElementById('txnTabPayee').value = item.title || item.payee || '';
+  
+  // Set Description and Payee
+  document.getElementById('txnTabDescription').value = item.title || '';
+  let payeeName = item.payee_name || item.payee || '';
+  if (!payeeName && item.payee_id && window.FinnyCategoryLearner) {
+    const pObj = window.FinnyCategoryLearner.knownPayees.find(p => p.id === item.payee_id);
+    if (pObj) payeeName = pObj.name;
+  }
+  document.getElementById('txnTabPayee').value = payeeName;
+
   document.getElementById('txnTabAmount').value = Math.abs(Number(item.amount || 0));
   document.getElementById('txnTabNotes').value = item.notes || '';
 
@@ -823,12 +1109,55 @@ window.openTxnTabDrawer = function(txnId, forceEdit = false) {
   if (accSelect) accSelect.value = item.account_id || accountsEngine.selectedAccountId;
 
   const fromSelect = document.getElementById('txnTabFromAccountId');
-  if (fromSelect) fromSelect.value = item.account_id || accountsEngine.selectedAccountId;
+  const toSelect = document.getElementById('txnTabToAccountId');
+
+  if (flowType === 'Transfer') {
+    const isDebit = Number(item.amount) < 0;
+    if (isDebit) {
+      if (fromSelect) fromSelect.value = item.account_id || accountsEngine.selectedAccountId;
+    } else {
+      if (toSelect) toSelect.value = item.account_id || accountsEngine.selectedAccountId;
+    }
+
+    if (item.transfer_pair_id) {
+      // 1. First look in local memory
+      let partnerTxn = (accountsEngine.currentTxnsList || []).find(t => String(t.id) === String(item.transfer_pair_id))
+        || (accountsEngine.mergedTimeline || []).find(t => String(t.id) === String(item.transfer_pair_id));
+
+      if (partnerTxn) {
+        if (isDebit && toSelect) toSelect.value = partnerTxn.account_id;
+        else if (!isDebit && fromSelect) fromSelect.value = partnerTxn.account_id;
+      } else if (window.db) {
+        // 2. Query Supabase for the partner transaction's account_id
+        window.db.from('transactions').select('account_id').eq('id', item.transfer_pair_id).single().then(({ data: pairTxn }) => {
+          if (pairTxn) {
+            if (isDebit && toSelect) toSelect.value = pairTxn.account_id;
+            else if (!isDebit && fromSelect) fromSelect.value = pairTxn.account_id;
+          }
+        });
+      }
+    }
+  } else {
+    if (fromSelect) fromSelect.value = item.account_id || accountsEngine.selectedAccountId;
+  }
+
+  const currentAcc = accountsEngine.accounts.find(a => String(a.id) === String(item.account_id || accountsEngine.selectedAccountId));
+  if (currentAcc) {
+    const balEl = document.getElementById('txnFormAccountBalanceAmt');
+    const nameEl = document.getElementById('txnFormAccountBalanceName');
+    if (balEl) balEl.textContent = formatBalanceINR(currentAcc.current_balance);
+    if (nameEl) nameEl.textContent = currentAcc.name;
+  }
+
+  if (window.FinnyCategoryLearner) {
+    window.FinnyCategoryLearner.populateDatalists();
+    window.FinnyCategoryLearner.attachAllComboboxes();
+  }
 
   recalcTxnTabBalancePreview();
 };
 
-window.openNewTransactionDrawer = function() {
+window.openNewTransactionDrawer = function(forceModal = false, prefillData = null) {
   accountsEngine.selectedTxnTabItem = null;
   document.querySelectorAll('.txn-tab-row').forEach(r => r.classList.remove('selected-recon-row'));
 
@@ -841,16 +1170,27 @@ window.openNewTransactionDrawer = function() {
   document.getElementById('txnTabFormId').value = '';
   document.getElementById('txnTabTransferPairId').value = '';
 
-  document.getElementById('txnFormHeaderTitle').textContent = 'Add Transaction';
-  document.getElementById('txnFormHeaderSubtitle').textContent = 'Record a new entry directly into this account';
+  document.getElementById('txnFormHeaderTitle').textContent = prefillData ? 'Duplicate Transaction' : 'Add Transaction';
+  document.getElementById('txnFormHeaderSubtitle').textContent = prefillData ? 'Adjust details before saving' : 'Record a new entry directly into this account';
   document.getElementById('btnTxnTabSave').textContent = 'Save Transaction';
 
-  const today = toLocalISODate(new Date());
+  const today = prefillData?.date || toLocalISODate(new Date());
   document.getElementById('txnTabDate').value = today;
   
   const now = new Date();
-  const timeStr = [now.getHours(), now.getMinutes(), now.getSeconds()].map(v => String(v).padStart(2, '0')).join(':');
+  const timeStr = prefillData?.time || [now.getHours(), now.getMinutes(), now.getSeconds()].map(v => String(v).padStart(2, '0')).join(':');
   document.getElementById('txnTabTime').value = timeStr;
+
+  if (prefillData) {
+    if (prefillData.amount) document.getElementById('txnTabAmount').value = Math.abs(Number(prefillData.amount));
+    if (prefillData.title) document.getElementById('txnTabDescription').value = prefillData.title;
+    if (prefillData.payee_name || prefillData.payee) document.getElementById('txnTabPayee').value = prefillData.payee_name || prefillData.payee;
+    if (prefillData.notes) document.getElementById('txnTabNotes').value = prefillData.notes;
+    if (prefillData.category_id) document.getElementById('txnTabCategoryId').value = prefillData.category_id;
+    setTxnTabType(prefillData.type || 'Expense');
+  } else {
+    setTxnTabType('Expense');
+  }
 
   const accSelect = document.getElementById('txnTabAccountId');
   if (accSelect) accSelect.value = accountsEngine.selectedAccountId;
@@ -858,14 +1198,25 @@ window.openNewTransactionDrawer = function() {
   const fromSelect = document.getElementById('txnTabFromAccountId');
   if (fromSelect) fromSelect.value = accountsEngine.selectedAccountId;
 
-  setTxnTabType('Expense');
+  const currentAcc = accountsEngine.accounts.find(a => String(a.id) === String(accountsEngine.selectedAccountId));
+  if (currentAcc) {
+    const balEl = document.getElementById('txnFormAccountBalanceAmt');
+    const nameEl = document.getElementById('txnFormAccountBalanceName');
+    if (balEl) balEl.textContent = formatBalanceINR(currentAcc.current_balance);
+    if (nameEl) nameEl.textContent = currentAcc.name;
+  }
+
+  if (window.FinnyCategoryLearner) {
+    window.FinnyCategoryLearner.populateDatalists();
+  }
+
   recalcTxnTabBalancePreview();
 };
 
 window.clearSelectedTxnTabItem = function() {
   accountsEngine.selectedTxnTabItem = null;
   document.querySelectorAll('.txn-tab-row').forEach(r => r.classList.remove('selected-recon-row'));
-  openNewTransactionDrawer();
+  openNewTransactionDrawer(false);
 };
 
 window.setTxnTabType = function(type) {
@@ -935,12 +1286,29 @@ window.handleTxnTabSave = async function(e) {
   const inputTime = document.getElementById('txnTabTime')?.value || '12:00:00';
   const finalTime = inputTime.length === 5 ? inputTime + ':00' : inputTime;
 
-  const payeeVal = document.getElementById('txnTabPayee')?.value?.trim() || 'Untitled';
+  const descVal = document.getElementById('txnTabDescription')?.value?.trim() || 'Untitled';
+  const payeeVal = document.getElementById('txnTabPayee')?.value?.trim() || '';
   const amountVal = parseFloat(document.getElementById('txnTabAmount')?.value) || 0;
   const typeVal = accountsEngine.txnTabCurrentType || 'Expense';
   const categoryId = document.getElementById('txnTabCategoryId')?.value || null;
   const notesVal = document.getElementById('txnTabNotes')?.value?.trim() || null;
   const signedAmt = (typeVal === 'Expense') ? -Math.abs(amountVal) : Math.abs(amountVal);
+
+  // Auto-learn category for description
+  if (window.FinnyCategoryLearner) {
+    window.FinnyCategoryLearner.recordDescription(descVal, categoryId);
+  }
+
+  // Resolve or Auto-create Payee
+  let resolvedPayeeId = null;
+  if (payeeVal && window.FinnyCategoryLearner) {
+    resolvedPayeeId = await window.FinnyCategoryLearner.resolveOrCreatePayee(payeeVal);
+  }
+
+  let finalNotes = notesVal;
+  if (payeeVal && !resolvedPayeeId) {
+    finalNotes = finalNotes ? `Payee: ${payeeVal}\n${finalNotes}` : `Payee: ${payeeVal}`;
+  }
 
   const finalHashId = buildManualHashId(finalDate, finalTime, amountVal);
   const affectedYM = finalDate.slice(0, 7);
@@ -962,8 +1330,9 @@ window.handleTxnTabSave = async function(e) {
           amount: -Math.abs(amountVal),
           date: finalDate,
           time: finalTime,
-          title: payeeVal,
-          notes: notesVal,
+          title: descVal,
+          payee_id: resolvedPayeeId,
+          notes: finalNotes,
           hash_id: finalHashId
         }).eq('id', txnId);
 
@@ -973,8 +1342,9 @@ window.handleTxnTabSave = async function(e) {
             amount: Math.abs(amountVal),
             date: finalDate,
             time: finalTime,
-            title: payeeVal,
-            notes: notesVal,
+            title: descVal,
+            payee_id: resolvedPayeeId,
+            notes: finalNotes,
             hash_id: finalHashId
           }).eq('id', pairId);
         }
@@ -987,12 +1357,13 @@ window.handleTxnTabSave = async function(e) {
             id: legOutId,
             date: finalDate,
             time: finalTime,
-            title: payeeVal,
+            title: descVal,
+            payee_id: resolvedPayeeId,
             amount: -Math.abs(amountVal),
             type: 'Transfer',
             account_id: fromAcc,
             category_id: null,
-            notes: notesVal,
+            notes: finalNotes,
             source: 'Manual',
             hash_id: finalHashId,
             transfer_pair_id: legInId
@@ -1001,12 +1372,13 @@ window.handleTxnTabSave = async function(e) {
             id: legInId,
             date: finalDate,
             time: finalTime,
-            title: payeeVal,
+            title: descVal,
+            payee_id: resolvedPayeeId,
             amount: Math.abs(amountVal),
             type: 'Transfer',
             account_id: toAcc,
             category_id: null,
-            notes: notesVal,
+            notes: finalNotes,
             source: 'Manual',
             hash_id: finalHashId,
             transfer_pair_id: legOutId
@@ -1019,11 +1391,12 @@ window.handleTxnTabSave = async function(e) {
         account_id: accId,
         date: finalDate,
         time: finalTime,
-        title: payeeVal,
+        title: descVal,
+        payee_id: resolvedPayeeId,
         amount: signedAmt,
         type: typeVal,
         category_id: categoryId,
-        notes: notesVal,
+        notes: finalNotes,
         hash_id: finalHashId
       };
 
@@ -1032,6 +1405,8 @@ window.handleTxnTabSave = async function(e) {
         if (updErr) throw updErr;
       } else {
         payload.source = 'Manual';
+        const { data: genId } = await db.rpc('fn_generate_txn_id');
+        if (genId) payload.id = genId;
         const { error: insErr } = await db.from('transactions').insert([payload]);
         if (insErr) throw insErr;
       }
@@ -1859,6 +2234,18 @@ async function renderRichCardDetails(containerId, item) {
     `;
   }
 
+  const curBal = Number(curAcc?.current_balance || 0);
+  html += `
+    <div class="account-balance-card" style="margin-top: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+      <div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Account Balance</div>
+      <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 4px;">${curAcc?.name || 'Account'}</div>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 2px;">
+        <span style="font-size: 16px; font-weight: 800; color: #0f172a;">${formatBalanceINR(curBal)}</span>
+        <span class="status-pill active" style="font-size: 11px; font-weight: 600; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 9999px;">Active</span>
+      </div>
+    </div>
+  `;
+
   container.innerHTML = html;
 }
 
@@ -1874,164 +2261,20 @@ window.openAccountImportDrawer = function(id, isStaged, forceEdit = false) {
   const viewState = document.getElementById('inspectorViewState');
   const formState = document.getElementById('inspectorFormState');
 
-if (!item.isStaged && !forceEdit) {
+  if (!forceEdit) {
     if (viewState) viewState.style.display = 'block';
     if (formState) formState.style.display = 'none';
 
-    document.getElementById('viewTitle').textContent = item.payee || item.description || 'Recorded Transaction';
-    document.getElementById('viewDateTime').textContent = `${item.date} • ${item.time ? item.time.slice(0, 5) : '12:00'}`;
-    
-    const amtEl = document.getElementById('viewAmount');
-    amtEl.textContent = (item.amount < 0 ? '-₹' : '+₹') + formatCurrency(Math.abs(item.amount));
-    amtEl.style.color = item.amount < 0 ? '#dc2626' : '#16a34a';
-
-    const typeBadge = document.getElementById('viewTypeBadge');
-    typeBadge.textContent = item.type;
-    typeBadge.className = `type-pill-box ${item.type.toLowerCase()}`;
-
-    // --- REPLACEMENT: Build Dynamic Rich Metadata Body ---
-    const container = document.getElementById('viewDynamicContainer') || document.querySelector('.view-meta-list');
-    if (container) {
-      const isTransfer = (item.type === 'Transfer');
-      const safeHash = item.hash_id || '—';
-      const balAfter = item.projectedBalanceAfter !== undefined ? item.projectedBalanceAfter : item.account_running_balance;
-
-      const currentAcc = accountsEngine.accounts.find(a => String(a.id) === String(item.account_id || accountsEngine.selectedAccountId));
-      const curAccMask = currentAcc?.account_number_masked ? ` (•••• ${currentAcc.account_number_masked.slice(-4)})` : '';
-      const curAccLabel = currentAcc ? `${currentAcc.name}${curAccMask}` : 'Current Account';
-
-      let detailsHtml = '';
-
-      if (isTransfer) {
-        let fromText = curAccLabel;
-        let toText = 'Transfer Partner';
-
-        // Check if destination partner account can be resolved from local accounts memory
-        if (item.transfer_pair_id) {
-          const partnerLeg = accountsEngine.mergedTimeline.find(t => String(t.id) === String(item.transfer_pair_id));
-          if (partnerLeg) {
-            const partnerAcc = accountsEngine.accounts.find(a => String(a.id) === String(partnerLeg.account_id));
-            const partnerMask = partnerAcc?.account_number_masked ? ` (•••• ${partnerAcc.account_number_masked.slice(-4)})` : '';
-            const partnerLabel = partnerAcc ? `${partnerAcc.name}${partnerMask}` : 'Account';
-
-            if (Number(item.amount) < 0) {
-              fromText = curAccLabel;
-              toText = partnerLabel;
-            } else {
-              fromText = partnerLabel;
-              toText = curAccLabel;
-            }
-          }
+    populateUnifiedDetailsCard('imp', item, {
+      onEdit: () => openAccountImportDrawer(item.id, Boolean(item.isStaged), true),
+      onDelete: () => {
+        if (item.isStaged) {
+          rejectImportItem(item.id);
+        } else {
+          deleteRecordedTxn(item.id);
         }
-
-        detailsHtml = `
-          <div class="transfer-route-box" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:12px; display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
-              <span style="color:#64748b; font-weight:500; font-size:11px;">📤 From</span>
-              <span style="font-weight:600; color:#0f172a;">${fromText}</span>
-            </div>
-            <div style="padding-left:14px; color:#94a3b8; font-size:11px; line-height:1;">│<br>▼</div>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
-              <span style="color:#64748b; font-weight:500; font-size:11px;">📥 To</span>
-              <span style="font-weight:600; color:#0f172a;">${toText}</span>
-            </div>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px;">
-            <span style="color:#64748b;">Status</span>
-            <span class="already-rec-pill">Posted</span>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Balance After</span>
-            <span style="font-weight:700; color:#0f172a;">${balAfter !== undefined && balAfter !== null ? formatBalanceINR(balAfter) : '—'}</span>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; flex-direction:column; gap:4px; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Remarks / Notes</span>
-            <p style="margin:0; font-size:11px; color:#334155;">${item.notes || item.description || 'No remarks recorded'}</p>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Transaction ID</span>
-            <span style="font-family:monospace; font-weight:700; color:#0f172a;">${item.id || '—'}</span>
-          </div>
-
-          ${item.transfer_pair_id ? `
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Linked Pair ID</span>
-            <span style="font-family:monospace; color:#2563eb;">${item.transfer_pair_id}</span>
-          </div>` : ''}
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; align-items:center; padding-bottom:8px; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Hash ID</span>
-            <span style="display:inline-flex; align-items:center; gap:6px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; font-family:monospace; font-size:11px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-              ${safeHash}
-              ${safeHash !== '—' ? `<button type="button" onclick="navigator.clipboard.writeText('${safeHash}'); this.textContent='✓'; setTimeout(()=>this.textContent='📋', 1500);" style="border:none; background:none; cursor:pointer; padding:0; font-size:11px;" title="Copy Hash">📋</button>` : ''}
-            </span>
-          </div>
-        `;
-      } else {
-        const rawCat = accountsEngine.categories[item.categoryId || item.category_id];
-        const catName = (typeof rawCat === 'object' ? rawCat?.name : rawCat) || item.category_name || 'General';
-        const catGroup = (typeof rawCat === 'object' ? rawCat?.group : null) || item.category_group || 'General Expenses';
-
-        detailsHtml = `
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px;">
-            <span style="color:#64748b;">Account</span>
-            <span style="font-weight:600; color:#0f172a;">${curAccLabel}</span>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Account Group</span>
-            <span style="color:#475569;">${currentAcc?.account_group || 'Bank Accounts'}</span>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Category Group</span>
-            <span style="font-weight:600; color:#0f172a;">${catGroup}</span>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Category</span>
-            <span style="color:#0f172a;">${catName}</span>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Status</span>
-            <span class="already-rec-pill">Posted</span>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Balance After</span>
-            <span style="font-weight:700; color:#0f172a;">${balAfter !== undefined && balAfter !== null ? formatBalanceINR(balAfter) : '—'}</span>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; flex-direction:column; gap:4px; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Remarks / Notes</span>
-            <p style="margin:0; font-size:11px; color:#334155;">${item.notes || item.description || 'No remarks recorded'}</p>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid #f1f5f9; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Transaction ID</span>
-            <span style="font-family:monospace; font-weight:700; color:#0f172a;">${item.id || '—'}</span>
-          </div>
-
-          <div class="view-meta-row" style="display:flex; justify-content:space-between; align-items:center; padding-bottom:8px; font-size:12px; margin-top:8px;">
-            <span style="color:#64748b;">Hash ID</span>
-            <span style="display:inline-flex; align-items:center; gap:6px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; font-family:monospace; font-size:11px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-              ${safeHash}
-              ${safeHash !== '—' ? `<button type="button" onclick="navigator.clipboard.writeText('${safeHash}'); this.textContent='✓'; setTimeout(()=>this.textContent='📋', 1500);" style="border:none; background:none; cursor:pointer; padding:0; font-size:11px;" title="Copy Hash">📋</button>` : ''}
-            </span>
-          </div>
-        `;
       }
-
-      container.innerHTML = detailsHtml;
-    }
-
-    document.getElementById('btnEditViewedTxn').onclick = () => openAccountImportDrawer(item.id, false, true);
-    document.getElementById('btnDeleteViewedTxn').onclick = () => deleteRecordedTxn(item.id);
+    });
     return;
   }
 
@@ -2046,7 +2289,17 @@ if (!item.isStaged && !forceEdit) {
   document.getElementById('panelDate').value = safeDate;
   document.getElementById('panelTime').value = item.time ? String(item.time).slice(0, 8) : '12:00:00';
   
-  document.getElementById('panelTitle').value = item.payee || item.description || '';
+  const descVal = item.title || item.description || '';
+  let payeeVal = item.payee_name || item.payee || '';
+  if (!payeeVal && item.payee_id && window.FinnyCategoryLearner) {
+    const pObj = window.FinnyCategoryLearner.knownPayees.find(p => p.id === item.payee_id);
+    if (pObj) payeeVal = pObj.name;
+  }
+  const elDesc = document.getElementById('panelDescription');
+  if (elDesc) elDesc.value = descVal;
+  const elPayee = document.getElementById('panelPayee');
+  if (elPayee) elPayee.value = payeeVal;
+
   document.getElementById('panelAmount').value = Math.abs(item.amount);
   document.getElementById('panelNotes').value = item.notes || '';
 
@@ -2062,7 +2315,34 @@ if (!item.isStaged && !forceEdit) {
 
   const fromSelect = document.getElementById('panelFromAccountId');
   const toSelect = document.getElementById('panelToAccountId');
-  if (fromSelect) fromSelect.value = accountsEngine.selectedAccountId;
+
+  if (flowType === 'Transfer') {
+    const isDebit = Number(item.amount) < 0;
+    if (isDebit) {
+      if (fromSelect) fromSelect.value = item.account_id || accountsEngine.selectedAccountId;
+    } else {
+      if (toSelect) toSelect.value = item.account_id || accountsEngine.selectedAccountId;
+    }
+
+    if (item.transfer_pair_id) {
+      let partnerTxn = (accountsEngine.currentTxnsList || []).find(t => String(t.id) === String(item.transfer_pair_id))
+        || (accountsEngine.mergedTimeline || []).find(t => String(t.id) === String(item.transfer_pair_id));
+
+      if (partnerTxn) {
+        if (isDebit && toSelect) toSelect.value = partnerTxn.account_id;
+        else if (!isDebit && fromSelect) fromSelect.value = partnerTxn.account_id;
+      } else if (window.db) {
+        window.db.from('transactions').select('account_id').eq('id', item.transfer_pair_id).single().then(({ data: pairTxn }) => {
+          if (pairTxn) {
+            if (isDebit && toSelect) toSelect.value = pairTxn.account_id;
+            else if (!isDebit && fromSelect) fromSelect.value = pairTxn.account_id;
+          }
+        });
+      }
+    }
+  } else {
+    if (fromSelect) fromSelect.value = item.account_id || accountsEngine.selectedAccountId;
+  }
 
   const headerTitle = document.getElementById('panelFormTitle');
   const headerSubtitle = document.getElementById('panelFormSubtitle');
@@ -2076,6 +2356,11 @@ if (!item.isStaged && !forceEdit) {
     headerTitle.textContent = 'Edit Recorded Entry';
     headerSubtitle.textContent = 'Update recorded transaction';
     if (btnSave) btnSave.textContent = 'Save Changes';
+  }
+
+  if (window.FinnyCategoryLearner) {
+    window.FinnyCategoryLearner.populateDatalists();
+    window.FinnyCategoryLearner.attachAllComboboxes();
   }
 
   recalcAccountBalancePreview();
@@ -2141,12 +2426,29 @@ window.handleAccountImportSave = async function(e) {
   let finalTime = (inputTime && inputTime.trim()) ? inputTime.trim() : (item?.time || '12:00:00');
   if (finalTime.length === 5) finalTime += ':00';
 
-  const payeeVal = document.getElementById('panelTitle')?.value?.trim() || item?.payee || 'Untitled';
+  const descVal = (document.getElementById('panelDescription')?.value || item?.description || 'Untitled').trim();
+  const payeeVal = (document.getElementById('panelPayee')?.value || item?.payee || '').trim();
   const amountVal = parseFloat(document.getElementById('panelAmount')?.value) || 0;
   const typeVal = accountsEngine.currentDrawerType || item?.type || 'Expense';
   const categoryId = document.getElementById('panelCategoryId')?.value || null;
   const notesVal = document.getElementById('panelNotes')?.value?.trim() || null;
   const signedAmt = (typeVal === 'Expense') ? -Math.abs(amountVal) : Math.abs(amountVal);
+
+  // Auto-learn category for description
+  if (window.FinnyCategoryLearner) {
+    window.FinnyCategoryLearner.recordDescription(descVal, categoryId);
+  }
+
+  // Resolve or Auto-create Payee
+  let resolvedPayeeId = null;
+  if (payeeVal && window.FinnyCategoryLearner) {
+    resolvedPayeeId = await window.FinnyCategoryLearner.resolveOrCreatePayee(payeeVal);
+  }
+
+  let finalNotes = notesVal;
+  if (payeeVal && !resolvedPayeeId) {
+    finalNotes = finalNotes ? `Payee: ${payeeVal}\n${finalNotes}` : `Payee: ${payeeVal}`;
+  }
 
   const finalHashId = item?.hash_id || buildManualHashId(finalDate, finalTime, amountVal);
   const affectedYM = finalDate.slice(0, 7);
@@ -2156,12 +2458,12 @@ window.handleAccountImportSave = async function(e) {
       await db.from('staged_transactions').update({
         date: finalDate,
         time: finalTime,
-        payee: payeeVal,
-        description: payeeVal,
+        payee: payeeVal || descVal,
+        description: descVal,
         amount: signedAmt,
         type: typeVal,
         category_id: categoryId,
-        notes: notesVal
+        notes: finalNotes
       }).eq('id', txnId);
 
       if (typeVal === 'Transfer') {
@@ -2176,12 +2478,13 @@ window.handleAccountImportSave = async function(e) {
             id: legOutId,
             date: finalDate,
             time: finalTime,
-            title: payeeVal,
+            title: descVal,
+            payee_id: resolvedPayeeId,
             amount: -Math.abs(amountVal),
             type: 'Transfer',
             account_id: accountsEngine.selectedAccountId,
             category_id: null,
-            notes: notesVal,
+            notes: finalNotes,
             source: 'Import',
             hash_id: finalHashId,
             transfer_pair_id: legInId
@@ -2190,12 +2493,13 @@ window.handleAccountImportSave = async function(e) {
             id: legInId,
             date: finalDate,
             time: finalTime,
-            title: payeeVal,
+            title: descVal,
+            payee_id: resolvedPayeeId,
             amount: Math.abs(amountVal),
             type: 'Transfer',
             account_id: destAcc ? destAcc.id : accountsEngine.selectedAccountId,
             category_id: null,
-            notes: notesVal,
+            notes: finalNotes,
             source: 'Import',
             hash_id: finalHashId,
             transfer_pair_id: legOutId
@@ -2205,7 +2509,7 @@ window.handleAccountImportSave = async function(e) {
       } else {
         const { error: rpcErr } = await db.rpc('fn_approve_staged_transaction', {
           p_staged_id: txnId,
-          p_final_title: payeeVal,
+          p_final_title: descVal,
           p_final_category_id: categoryId,
           p_final_account_id: accountsEngine.selectedAccountId
         });
@@ -2227,8 +2531,9 @@ window.handleAccountImportSave = async function(e) {
           amount: -Math.abs(amountVal),
           date: finalDate,
           time: finalTime,
-          title: payeeVal,
-          notes: notesVal,
+          title: descVal,
+          payee_id: resolvedPayeeId,
+          notes: finalNotes,
           hash_id: finalHashId
         }).eq('id', txnId);
 
@@ -2238,8 +2543,9 @@ window.handleAccountImportSave = async function(e) {
             amount: Math.abs(amountVal),
             date: finalDate,
             time: finalTime,
-            title: payeeVal,
-            notes: notesVal,
+            title: descVal,
+            payee_id: resolvedPayeeId,
+            notes: finalNotes,
             hash_id: finalHashId
           }).eq('id', pairId);
         }
@@ -2251,11 +2557,12 @@ window.handleAccountImportSave = async function(e) {
             account_id: accId,
             date: finalDate,
             time: finalTime,
-            title: payeeVal,
+            title: descVal,
+            payee_id: resolvedPayeeId,
             amount: signedAmt,
             type: typeVal,
             category_id: categoryId,
-            notes: notesVal,
+            notes: finalNotes,
             hash_id: finalHashId
           })
           .eq('id', txnId);

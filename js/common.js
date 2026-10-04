@@ -23,11 +23,13 @@ window.formatDateHeader = function(dateStr) {
 // Global Nav Active Highlighter based on current filename
 window.initNavigation = function() {
   const path = window.location.pathname;
-  const page = path.split("/").pop() || 'index.html';
+  let page = path.split("/").pop() || 'index.html';
+  if (!page || page === '') page = 'index.html';
 
   document.querySelectorAll('.nav-links .nav-item').forEach(link => {
-    const href = link.getAttribute('href');
-    if (href === page || (page === '' && href === 'index.html')) {
+    const href = link.getAttribute('href') || '';
+    const hrefPage = href.split("/").pop();
+    if (hrefPage === page || (page === 'index.html' && hrefPage === 'dashboard.html')) {
       link.classList.add('active');
     } else {
       link.classList.remove('active');
@@ -43,13 +45,13 @@ window.initThemeSystem = function() {
   if (themeBtn) themeBtn.textContent = savedTheme === 'light' ? '🌙' : '☀️';
 
   if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
+    themeBtn.onclick = () => {
       const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
       const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', nextTheme);
       localStorage.setItem('finny-theme', nextTheme);
       themeBtn.textContent = nextTheme === 'light' ? '🌙' : '☀️';
-    });
+    };
   }
 };
 
@@ -74,10 +76,17 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') window.closeAllModals();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  window.initThemeSystem();
-  window.initNavigation();
-});
+// Auto-run theme and nav initializers safely
+function runFinnyInits() {
+  if (window.initThemeSystem) window.initThemeSystem();
+  if (window.initNavigation) window.initNavigation();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', runFinnyInits);
+} else {
+  runFinnyInits();
+}
 
 // ==========================================================================
 // FINNY STANDARDIZED HASH GENERATOR (SHARED UTILITY)
@@ -91,3 +100,34 @@ window.generateFinnyHashId = function(dateStr, timeStr, amount) {
   const amountInPaise = Math.round(Math.abs(Number(amount || 0)) * 100);
   return `H${cleanDate}${cleanTime}${amountInPaise}`;
 };
+
+// Universal Category Color & Icon Palette
+window.getCategoryDesign = function(categoryName = '') {
+  const cat = (categoryName || '').toLowerCase();
+  if (cat.includes('food') || cat.includes('dining') || cat.includes('snack') || cat.includes('biryani') || cat.includes('lunch')) {
+    return { icon: '🍽️', bg: '#fef2f2', color: '#dc2626' };
+  }
+  if (cat.includes('transport') || cat.includes('uber') || cat.includes('fuel') || cat.includes('petrol')) {
+    return { icon: '🚗', bg: '#eff6ff', color: '#2563eb' };
+  }
+  if (cat.includes('shop') || cat.includes('blinkit') || cat.includes('amazon') || cat.includes('grocer')) {
+    return { icon: '🛍️', bg: '#fff7ed', color: '#ea580c' };
+  }
+  if (cat.includes('salary') || cat.includes('income')) {
+    return { icon: '💼', bg: '#f0fdf4', color: '#16a34a' };
+  }
+  if (cat.includes('rent') || cat.includes('emi') || cat.includes('house') || cat.includes('bill')) {
+    return { icon: '⚡', bg: '#fefce8', color: '#ca8a04' };
+  }
+  return { icon: '🏷️', bg: '#f1f5f9', color: '#475569' };
+};
+
+// Details Card Tabs Listener
+document.addEventListener('click', (e) => {
+  const tab = e.target.closest('.details-tabs .det-tab');
+  if (tab) {
+    const parent = tab.parentElement;
+    parent.querySelectorAll('.det-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  }
+});

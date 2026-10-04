@@ -19,25 +19,46 @@
   <!-- Global Navigation Header -->
   <header class="finny-nav">
     <div class="nav-left">
-      <div class="brand-logo">
-        <span class="logo-box">FF</span>
+      <a href="dashboard.html" class="brand-logo">
+        <div class="logo-box">
+          <svg class="rabbit-mascot" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g class="rabbit-body">
+              <path class="rabbit-ear ear-left" d="M12 18 C9 10, 10 2, 13.5 2 C16.5 2, 16 10, 15 18 Z" fill="#ffffff"/>
+              <path class="rabbit-ear-inner ear-left" d="M12.5 16 C10.8 10, 11.5 4, 13.5 4 C15.2 4, 15 10, 14.2 16 Z" fill="#fca5a5"/>
+              <path class="rabbit-ear-right ear-right" d="M24 18 C27 10, 26 2, 22.5 2 C19.5 2, 20 10, 21 18 Z" fill="#ffffff"/>
+              <path class="rabbit-ear-inner ear-right" d="M23.5 16 C25.2 10, 24.5 4, 22.5 4 C20.8 4, 21 10, 21.8 16 Z" fill="#fca5a5"/>
+              <ellipse cx="18" cy="22" rx="10.5" ry="8.5" fill="#ffffff"/>
+              <circle cx="11.5" cy="23.2" r="1.8" fill="#fecdd3"/>
+              <circle cx="24.5" cy="23.2" r="1.8" fill="#fecdd3"/>
+              <circle class="rabbit-eye" cx="13.8" cy="20.8" r="1.4" fill="#0f172a"/>
+              <circle class="rabbit-eye" cx="22.2" cy="20.8" r="1.4" fill="#0f172a"/>
+              <circle cx="13.3" cy="20.3" r="0.6" fill="#ffffff"/>
+              <circle cx="21.7" cy="20.3" r="0.6" fill="#ffffff"/>
+              <ellipse cx="18" cy="23.2" rx="1.2" ry="0.9" fill="#f43f5e"/>
+              <path d="M16.8 24.8 C17.4 25.5, 18.6 25.5, 19.2 24.8" stroke="#64748b" stroke-width="0.8" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </div>
         <div class="brand-text">
           <span class="brand-name">Finny</span>
-          <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
         </div>
-      </div>
-      <nav class="nav-links">
-        <a href="dashboard.html" class="nav-item">Dashboard</a>
-        <a href="accounts.html" class="nav-item">Accounts</a>
-        <a href="transactions.html" class="nav-item">Transactions</a>
-        <a href="import.html" class="nav-item">Import</a>
-        <a href="reconcile.html" class="nav-item">Reconcile</a>
-        <a href="budget.html" class="nav-item">Budget</a>
-        <a href="loans.html" class="nav-item">Loans</a>
-        <a href="planner.html" class="nav-item">Planner</a>
-        <a href="settings.html" class="nav-item">Settings</a>
-      </nav>
+      </a>
     </div>
+
+    <!-- Center Navigation Pill Bar -->
+    <nav class="nav-links">
+      <a href="dashboard.html" class="nav-item">Dashboard</a>
+      <a href="accounts.html" class="nav-item">Accounts</a>
+      <a href="transactions.html" class="nav-item active">Transactions</a>
+      <a href="import.html" class="nav-item">Import</a>
+      <a href="reconcile.html" class="nav-item">Reconcile</a>
+      <a href="budget.html" class="nav-item">Budget</a>
+      <a href="loans.html" class="nav-item">Loans</a>
+      <a href="planner.html" class="nav-item">Planner</a>
+      <a href="settings.html" class="nav-item">Settings</a>
+    </nav>
+
+    <!-- Right User & Theme Controls -->
     <div class="nav-right">
       <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">🌙</button>
       <div class="user-avatar" title="Dinesh Reddy">DR</div>
@@ -56,20 +77,20 @@
         <!-- Quick Period Selector Preset -->
         <div class="preset-dropdown-wrap">
           <select id="quickPeriodSelect" class="select-box period-select">
+            <option value="last_6_months" selected>Last 6 Months</option>
             <option value="this_month">This Month</option>
             <option value="last_month">Last Month</option>
             <option value="this_week">This Week</option>
             <option value="last_week">Last Week</option>
             <option value="last_3_months">Last 3 Months</option>
-            <option value="last_6_months">Last 6 Months</option>
             <option value="this_year">This Year</option>
             <option value="last_year">Last Year</option>
-            <option value="custom" selected>Custom Range</option>
+            <option value="custom">Custom Range</option>
           </select>
         </div>
 
         <!-- Custom Date Range Controls (Toggled) -->
-        <div class="date-range-control" id="customDateRangeControl">
+        <div class="date-range-control" id="customDateRangeControl" style="display: none;">
           <button class="date-nav-btn" id="prevMonthBtn" title="Previous Month">‹</button>
           <div class="date-display">
             <span class="cal-icon">📅</span>
@@ -81,7 +102,7 @@
         </div>
 
         <!-- Add Transaction Trigger -->
-        <button type="button" class="btn btn-primary" onclick="window.openTransactionModal()">
+        <button type="button" class="btn btn-primary" onclick="openAddTransactionPanel()">
           + Add Transaction
         </button>
       </div>
@@ -251,23 +272,30 @@
             <div class="details-amount-hero" id="detailsAmount">- ₹0.00</div>
           </div>
 
-          <div class="details-tabs">
-            <button class="det-tab active">Details</button>
-            <button class="det-tab">History</button>
-          </div>
-
           <div class="details-fields">
             <div class="det-row">
               <span class="det-label">Payee</span>
               <span class="det-val font-semibold" id="detFieldPayee">—</span>
             </div>
             <div class="det-row">
+              <span class="det-label">Description</span>
+              <span class="det-val" id="detFieldDescription">—</span>
+            </div>
+            <div class="det-row">
               <span class="det-label">Category</span>
               <span class="det-val" id="detFieldCategory">—</span>
             </div>
-            <div class="det-row">
+            <div class="det-row" id="detRowSingleAccount">
               <span class="det-label">Account</span>
               <span class="det-val" id="detFieldAccount">—</span>
+            </div>
+            <div class="det-row" id="detRowFromAccount" style="display: none;">
+              <span class="det-label">From Account</span>
+              <span class="det-val font-semibold" id="detFieldFromAccount">—</span>
+            </div>
+            <div class="det-row" id="detRowToAccount" style="display: none;">
+              <span class="det-label">To Account</span>
+              <span class="det-val font-semibold" id="detFieldToAccount">—</span>
             </div>
             <div class="det-row">
               <span class="det-label">Date & Time</span>
@@ -282,6 +310,10 @@
               <span class="det-val status-indicator" id="detFieldStatus">● Completed</span>
             </div>
             <div class="det-row">
+              <span class="det-label">Hash ID</span>
+              <span class="det-val" id="detFieldHashId" style="font-family: monospace; font-size: 11px; cursor: pointer;" title="Click to copy hash">—</span>
+            </div>
+            <div class="det-row" id="detRowNotes" style="display: none;">
               <span class="det-label">Notes</span>
               <span class="det-val text-muted" id="detFieldNotes">None</span>
             </div>
@@ -294,7 +326,7 @@
           </div>
 
           <div class="account-balance-card">
-            <span class="det-label">Account Balance</span>
+            <span class="det-label">Balance After</span>
             <h4 id="detAccountName">Account</h4>
             <div class="acc-balance-row">
               <span class="acc-balance-num" id="detAccountBalance">₹0.00</span>
@@ -341,7 +373,7 @@
 
             <div class="form-input-group" id="panelGroupCategory">
               <label class="panel-label">Category</label>
-              <select id="panelCategoryId" class="panel-select"></select>
+              <select id="panelCategoryId" class="panel-select" onchange="window.finnyHandleCategoryChange('panelDescription', this.value)"></select>
             </div>
 
             <!-- Transfer Mode: From & To Accounts -->
@@ -356,10 +388,16 @@
               </div>
             </div>
 
-            <!-- Payee / Description -->
+            <!-- Description (Searchable Combobox) -->
             <div class="form-input-group">
-              <label class="panel-label">Payee / Description *</label>
-              <input type="text" id="panelTitle" class="panel-input" placeholder="e.g. Grocery, Salary, House Rent" required>
+              <label class="panel-label">Description *</label>
+              <input id="panelDescription" class="panel-input" placeholder="Type or select description (e.g. Groceries, Dinner, Maid - BSR colony)" required autocomplete="off" oninput="window.finnyHandleDescInput(this.value, 'panelCategoryId')" />
+            </div>
+
+            <!-- Payee (Searchable Combobox) -->
+            <div class="form-input-group">
+              <label class="panel-label">Payee</label>
+              <input id="panelPayee" class="panel-input" placeholder="Type or select payee (e.g. Amazon, Swiggy, Maid, Landlord)" autocomplete="off" />
             </div>
 
             <!-- Date & Time Row -->

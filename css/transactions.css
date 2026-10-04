@@ -2,10 +2,13 @@
    TRANSACTIONS PAGE SHELL & HEADER
    ========================================================================== */
 .finny-shell {
-  padding: 24px 32px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 20px 32px 32px 32px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .page-header {
@@ -14,18 +17,19 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .title-block h1 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
 
 .title-block p {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .header-actions {
@@ -641,8 +645,6 @@
 }
 
 @media (max-width: 800px) {
-  .finny-nav { padding: 0 16px; }
-  .nav-links { display: none; }
   .finny-shell { padding: 16px; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .workspace-grid { grid-template-columns: 1fr; }

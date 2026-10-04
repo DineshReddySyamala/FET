@@ -4,55 +4,355 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Finny — Dashboard</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/global.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  
+  <!-- Supabase & Chart.js Engine -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+  <!-- Finny Navigation Bar -->
   <header class="finny-nav">
     <div class="nav-left">
-      <div class="brand-logo">
-        <span class="logo-box">FF</span>
+      <a href="dashboard.html" class="brand-logo">
+        <div class="logo-box">
+          <svg class="rabbit-mascot" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g class="rabbit-body">
+              <!-- Left Ear -->
+              <path class="rabbit-ear ear-left" d="M12 18 C9 10, 10 2, 13.5 2 C16.5 2, 16 10, 15 18 Z" fill="#ffffff"/>
+              <path class="rabbit-ear-inner ear-left" d="M12.5 16 C10.8 10, 11.5 4, 13.5 4 C15.2 4, 15 10, 14.2 16 Z" fill="#fca5a5"/>
+              <!-- Right Ear -->
+              <path class="rabbit-ear ear-right" d="M24 18 C27 10, 26 2, 22.5 2 C19.5 2, 20 10, 21 18 Z" fill="#ffffff"/>
+              <path class="rabbit-ear-inner ear-right" d="M23.5 16 C25.2 10, 24.5 4, 22.5 4 C20.8 4, 21 10, 21.8 16 Z" fill="#fca5a5"/>
+              <!-- Head Base -->
+              <ellipse cx="18" cy="22" rx="10.5" ry="8.5" fill="#ffffff"/>
+              <!-- Cheeks / Blush -->
+              <circle cx="11.5" cy="23.2" r="1.8" fill="#fecdd3"/>
+              <circle cx="24.5" cy="23.2" r="1.8" fill="#fecdd3"/>
+              <!-- Cute Eyes -->
+              <circle class="rabbit-eye" cx="13.8" cy="20.8" r="1.4" fill="#0f172a"/>
+              <circle class="rabbit-eye" cx="22.2" cy="20.8" r="1.4" fill="#0f172a"/>
+              <!-- Eye Sparkles -->
+              <circle cx="13.3" cy="20.3" r="0.6" fill="#ffffff"/>
+              <circle cx="21.7" cy="20.3" r="0.6" fill="#ffffff"/>
+              <!-- Pink Nose -->
+              <ellipse cx="18" cy="23.2" rx="1.2" ry="0.9" fill="#f43f5e"/>
+              <!-- Mouth -->
+              <path d="M16.8 24.8 C17.4 25.5, 18.6 25.5, 19.2 24.8" stroke="#64748b" stroke-width="0.8" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </div>
         <div class="brand-text">
           <span class="brand-name">Finny</span>
-          <span class="brand-tagline">Better Money, Brighter Tomorrow</span>
         </div>
-      </div>
-       <nav class="nav-links">
-        <a href="dashboard.html" class="nav-item">Dashboard</a>
-        <a href="accounts.html" class="nav-item">Accounts</a>
-        <a href="transactions.html" class="nav-item">Transactions</a>
-        <a href="import.html" class="nav-item">Import</a>
-        <a href="reconcile.html" class="nav-item">Reconcile</a>
-        <a href="budget.html" class="nav-item">Budget</a>
-        <a href="loans.html" class="nav-item">Loans</a>
-        <a href="planner.html" class="nav-item">Planner</a>
-        <a href="settings.html" class="nav-item">Settings</a>
-      </nav>
+      </a>
     </div>
+
+    <!-- Center Navigation Pill Bar -->
+    <nav class="nav-links">
+      <a href="dashboard.html" class="nav-item active">Dashboard</a>
+      <a href="accounts.html" class="nav-item">Accounts</a>
+      <a href="transactions.html" class="nav-item">Transactions</a>
+      <a href="import.html" class="nav-item">Import</a>
+      <a href="reconcile.html" class="nav-item">Reconcile</a>
+      <a href="budget.html" class="nav-item">Budget</a>
+      <a href="loans.html" class="nav-item">Loans</a>
+      <a href="planner.html" class="nav-item">Planner</a>
+      <a href="settings.html" class="nav-item">Settings</a>
+    </nav>
+
+    <!-- Right User & Theme Controls -->
     <div class="nav-right">
       <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">🌙</button>
       <div class="user-avatar" title="Dinesh Reddy">DR</div>
     </div>
   </header>
 
-  <main class="finny-shell">
-    <div class="page-header">
-      <div class="title-block">
-        <h1>Dashboard</h1>
-        <p>Executive overview of your cash flow and financial health</p>
+  <!-- Main Dashboard Shell -->
+  <main class="dashboard-shell">
+
+    <!-- ====================================================================
+         ROW 1: TOP 6 HERO KPI CARDS
+         ==================================================================== -->
+    <section class="dash-kpi-grid">
+
+      <!-- KPI 1: Net Worth -->
+      <div class="dash-kpi-card">
+        <div class="dash-kpi-icon icon-purple">📊</div>
+        <div class="dash-kpi-content">
+          <span class="dash-kpi-title">Net Worth</span>
+          <h2 class="dash-kpi-val" id="kpiNetWorthVal">₹0.00</h2>
+          <span class="dash-kpi-sub text-green">↑ +5.6% from last month</span>
+        </div>
       </div>
-    </div>
-    <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:60px 20px; text-align:center; color:var(--text-muted); margin-top:20px;">
-      <h3>📊 Dashboard Module Coming Up</h3>
-      <p style="margin-top:8px; font-size:13px;">KPI widgets, spending heatmaps, and cash flow forecasts will live here.</p>
-    </div>
+
+      <!-- KPI 2: Total Assets -->
+      <div class="dash-kpi-card">
+        <div class="dash-kpi-icon icon-green">🏛️</div>
+        <div class="dash-kpi-content">
+          <span class="dash-kpi-title">Total Assets</span>
+          <h2 class="dash-kpi-val" id="kpiTotalAssetsVal">₹0.00</h2>
+          <span class="dash-kpi-sub text-muted" id="kpiTotalAssetsSub">● 6 accounts</span>
+        </div>
+      </div>
+
+      <!-- KPI 3: Total Liabilities -->
+      <div class="dash-kpi-card">
+        <div class="dash-kpi-icon icon-red">💳</div>
+        <div class="dash-kpi-content">
+          <span class="dash-kpi-title">Total Liabilities</span>
+          <h2 class="dash-kpi-val" id="kpiTotalLiabVal">₹0.00</h2>
+          <span class="dash-kpi-sub text-red" id="kpiTotalLiabSub">● 3 loans • 1 credit card</span>
+        </div>
+      </div>
+
+      <!-- KPI 4: Monthly Income (Avg) -->
+      <div class="dash-kpi-card">
+        <div class="dash-kpi-icon icon-blue">↗️</div>
+        <div class="dash-kpi-content">
+          <span class="dash-kpi-title">Monthly Income (Avg)</span>
+          <h2 class="dash-kpi-val" id="kpiMonthlyIncomeVal">₹0.00</h2>
+          <span class="dash-kpi-sub text-green">↑ +0% from last 3 months</span>
+        </div>
+      </div>
+
+      <!-- KPI 5: Monthly Expenses (Avg) -->
+      <div class="dash-kpi-card">
+        <div class="dash-kpi-icon icon-orange">↘️</div>
+        <div class="dash-kpi-content">
+          <span class="dash-kpi-title">Monthly Expenses (Avg)</span>
+          <h2 class="dash-kpi-val" id="kpiMonthlyExpenseVal">₹0.00</h2>
+          <span class="dash-kpi-sub text-red">↓ +8.3% from last 3 months</span>
+        </div>
+      </div>
+
+      <!-- KPI 6: This Month Savings Rate -->
+      <div class="dash-kpi-card">
+        <div class="dash-kpi-content">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="dash-kpi-title" style="font-weight: 700;">This Month</span>
+            <select class="dash-select-pill" style="font-size: 10px; padding: 2px 20px 2px 8px;">
+              <option>Save Rate</option>
+              <option>Total Savings</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Save Rate</span>
+            <span class="dash-kpi-val text-green" id="kpiSaveRateVal" style="font-size: 22px;">41%</span>
+          </div>
+          <div class="kpi-progress-wrap">
+            <div class="kpi-progress-fill" id="kpiSaveRateProgress" style="width: 41%;"></div>
+          </div>
+          <span class="dash-kpi-sub text-muted" id="kpiSaveRateSub" style="margin-top: 2px;">₹1,03,720 saved of ₹2,50,000</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         ROW 2: CHARTS ROW (Net Worth Trend, Cash Flow, Expense Donut)
+         ==================================================================== -->
+    <section class="dash-charts-grid">
+
+      <!-- Card 1: Net Worth Trend -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Net Worth Trend</div>
+          <div class="dash-card-actions">
+            <select class="dash-select-pill" id="selNetWorthPeriod">
+              <option value="6">Last 6 Months</option>
+              <option value="12">Last 12 Months</option>
+            </select>
+          </div>
+        </div>
+        <div class="trend-card-body">
+          <div class="trend-chart-col">
+            <canvas id="chartNetWorthTrend"></canvas>
+          </div>
+          <div class="trend-stats-col">
+            <div class="trend-stat-item">
+              <span class="stat-lbl">Current Net Worth</span>
+              <span class="stat-val" id="trendCurrentVal">₹11,98,441</span>
+              <span class="trend-growth-pill">↑ 15.6%</span>
+            </div>
+            <div class="trend-stat-item">
+              <span class="stat-lbl">Previous 6 Months</span>
+              <span class="stat-val text-muted" style="font-size: 14px;">₹10,36,820</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Monthly Cash Flow -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Monthly Cash Flow</div>
+          <div class="dash-card-actions">
+            <select class="dash-select-pill" id="selCashflowPeriod">
+              <option value="6">Last 6 Months</option>
+              <option value="12">Last 12 Months</option>
+            </select>
+          </div>
+        </div>
+        <div class="cashflow-chart-box">
+          <canvas id="chartMonthlyCashFlow"></canvas>
+        </div>
+      </div>
+
+      <!-- Card 3: Expense Breakdown -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Expense Breakdown</div>
+          <div class="dash-card-actions">
+            <select class="dash-select-pill" id="selExpenseBreakdownPeriod">
+              <option value="current">This Month</option>
+              <option value="prev">Last Month</option>
+            </select>
+          </div>
+        </div>
+        <div class="breakdown-body">
+          <div class="donut-col">
+            <canvas id="chartExpenseDonut"></canvas>
+            <div class="donut-center-text">
+              <span class="center-amt" id="donutCenterTotalVal">₹0.00</span>
+              <span class="center-lbl">Total Expenses</span>
+            </div>
+          </div>
+          <div class="breakdown-legend-col" id="expenseBreakdownLegend">
+            <!-- Dynamic Category List -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         ROW 3: MIDDLE OVERVIEW (Accounts, Upcoming Bills, Loans)
+         ==================================================================== -->
+    <section class="dash-middle-grid">
+
+      <!-- Card 1: Accounts Overview -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Accounts Overview</div>
+          <a href="accounts.html" class="dash-card-link">View All</a>
+        </div>
+        <div class="account-overview-list" id="accountsOverviewList">
+          <!-- Populated from Database -->
+        </div>
+      </div>
+
+      <!-- Card 2: Upcoming Bills & Payments -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Upcoming Bills & Payments</div>
+          <a href="transactions.html" class="dash-card-link">View All</a>
+        </div>
+        <div class="bills-list" id="upcomingBillsList">
+          <!-- Populated from Database & Dues -->
+        </div>
+      </div>
+
+      <!-- Card 3: Loans Overview -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Loans Overview</div>
+          <a href="loans.html" class="dash-card-link">View All</a>
+        </div>
+        <div class="loans-overview-list" id="loansOverviewList">
+          <!-- Populated from Loans & Liabilities -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         ROW 4: BOTTOM ROW (Recent Txns, Top Cats, Surplus Gauge, Goals)
+         ==================================================================== -->
+    <section class="dash-bottom-grid">
+
+      <!-- Card 1: Recent Transactions -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Recent Transactions</div>
+          <a href="transactions.html" class="dash-card-link">View All</a>
+        </div>
+        <div class="recent-txns-list" id="recentTransactionsList">
+          <!-- Populated dynamically via .limit(5) -->
+        </div>
+      </div>
+
+      <!-- Card 2: Top Spending Categories -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Top Spending Categories</div>
+          <select class="dash-select-pill" id="selTopCatPeriod">
+            <option value="current">This Month</option>
+            <option value="prev">Last Month</option>
+          </select>
+        </div>
+        <div class="top-cats-list" id="topCategoriesList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Card 3: Income vs Expenses -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Income vs Expenses</div>
+          <select class="dash-select-pill" id="selSurplusPeriod">
+            <option value="current">This Month</option>
+            <option value="prev">Last Month</option>
+          </select>
+        </div>
+        <div class="gauge-card-body">
+          <div class="gauge-chart-container">
+            <canvas id="chartSurplusGauge"></canvas>
+            <div class="gauge-center-stat">
+              <span class="gauge-val" id="gaugeCenterSurplusVal">₹0.00</span>
+              <span class="gauge-sub">Surplus</span>
+            </div>
+          </div>
+          <div class="gauge-footer-legend">
+            <div class="gauge-leg-item">
+              <span>● Income</span>
+              <strong class="income" id="gaugeLegendIncomeVal">₹0.00</strong>
+            </div>
+            <div class="gauge-leg-item">
+              <span>● Expenses</span>
+              <strong class="expense" id="gaugeLegendExpenseVal">₹0.00</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Financial Goals -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Financial Goals</div>
+          <a href="planner.html" class="dash-card-link">View All</a>
+        </div>
+        <div class="goals-list" id="financialGoalsList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+    </section>
+
   </main>
 
-  <script src="js/supabaseClient.js"></script>
-  <script src="js/common.js"></script>
-  <script src="transactionModal.js"></script>
+  <!-- Modular Scripts -->
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/transactionModal.js"></script>
+  <script src="../js/dashboard.js"></script>
 </body>
 </html>

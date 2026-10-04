@@ -1,0 +1,916 @@
+/* ==========================================================================
+   FINNY DASHBOARD STYLESHEET
+   Matches Modern Finny Design System (Light & Dark Theme)
+   ========================================================================== */
+
+/* Main Layout Shell */
+.dashboard-shell {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 28px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: var(--bg-app);
+}
+
+/* Custom Scrollbar for Shell */
+.dashboard-shell::-webkit-scrollbar {
+  width: 6px;
+}
+.dashboard-shell::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dashboard-shell::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-pill);
+}
+
+/* --------------------------------------------------------------------------
+   TOP 6 KPI HERO ROW
+   -------------------------------------------------------------------------- */
+.dash-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
+
+.dash-kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dash-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.dash-kpi-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.dash-kpi-icon.icon-purple {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+.dash-kpi-icon.icon-green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.dash-kpi-icon.icon-red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.dash-kpi-icon.icon-blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.dash-kpi-icon.icon-orange {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.dash-kpi-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash-kpi-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-kpi-val {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.dash-kpi-sub {
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dash-kpi-sub.text-green { color: var(--finny-income); }
+.dash-kpi-sub.text-red { color: var(--finny-expense); }
+.dash-kpi-sub.text-muted { color: var(--text-muted); }
+
+/* Progress Mini Bar (Used in KPI 6) */
+.kpi-progress-wrap {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-surface-secondary);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.kpi-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--finny-income);
+  transition: width 0.4s ease;
+}
+
+/* --------------------------------------------------------------------------
+   GENERIC DASHBOARD CARD SYSTEM
+   -------------------------------------------------------------------------- */
+.dash-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 10px;
+}
+
+.dash-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-card-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--finny-primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.dash-card-link:hover {
+  text-decoration: underline;
+}
+
+.dash-select-pill {
+  appearance: none;
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 4px 26px 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px;
+  outline: none;
+}
+.dash-select-pill:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: #cbd5e1;
+}
+
+/* --------------------------------------------------------------------------
+   MIDDLE ROW 1: 3-COLUMN CHARTS
+   -------------------------------------------------------------------------- */
+.dash-charts-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1.25fr 1fr;
+  gap: 16px;
+}
+
+/* Net Worth Trend Card Layout */
+.trend-card-body {
+  display: flex;
+  gap: 16px;
+  height: 220px;
+  align-items: center;
+}
+
+.trend-chart-col {
+  flex: 1;
+  height: 100%;
+  position: relative;
+}
+
+.trend-stats-col {
+  width: 135px;
+  min-width: 135px;
+  border-left: 1px solid var(--border-subtle);
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+.trend-stat-item .stat-lbl {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: block;
+}
+
+.trend-stat-item .stat-val {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 2px;
+  display: block;
+}
+
+.trend-growth-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--finny-income-tint);
+  color: var(--finny-income);
+  margin-top: 4px;
+}
+
+/* Cash Flow Chart Box */
+.cashflow-chart-box {
+  height: 220px;
+  position: relative;
+}
+
+/* Expense Breakdown Layout */
+.breakdown-body {
+  display: flex;
+  gap: 14px;
+  height: 220px;
+  align-items: center;
+}
+
+.donut-col {
+  width: 140px;
+  min-width: 140px;
+  height: 140px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-center-text {
+  position: absolute;
+  text-align: center;
+  pointer-events: none;
+}
+
+.donut-center-text .center-amt {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+}
+
+.donut-center-text .center-lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  display: block;
+}
+
+.breakdown-legend-col {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+.breakdown-legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 3px 0;
+}
+
+.breakdown-legend-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cat-bullet {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cat-name-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  font-weight: 500;
+  max-width: 110px;
+}
+
+.cat-pct-badge {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.cat-amt-val {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   MIDDLE ROW 2: 3-COLUMN OVERVIEWS
+   -------------------------------------------------------------------------- */
+.dash-middle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1.25fr;
+  gap: 16px;
+}
+
+/* Account Overview List */
+.account-overview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-overview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+.account-overview-row:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border);
+  transform: translateX(2px);
+}
+
+.acc-row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.acc-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.acc-title-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.acc-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.acc-amount-txt {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.acc-arrow-chevron {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Upcoming Bills & Payments */
+.bills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bill-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.bill-left-col {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bill-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.bill-info-titles h4 {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.bill-due-meta {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.bill-right-col {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bill-amount-val {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.bill-pay-btn {
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  background: var(--finny-primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.bill-pay-btn:hover {
+  background: var(--finny-primary-hover);
+  transform: translateY(-1px);
+}
+.bill-pay-btn.paid {
+  background: var(--finny-income-tint);
+  color: var(--finny-income);
+  cursor: default;
+}
+
+/* Loans Overview List */
+.loans-overview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loan-card-item {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.loan-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.loan-name-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loan-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.loan-name-brand h4 {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.loan-name-brand span {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.loan-emi-box {
+  text-align: right;
+}
+.loan-emi-box .emi-lbl {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: block;
+}
+.loan-emi-box .emi-val {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.loan-progress-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loan-prog-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.loan-prog-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--finny-primary);
+  transition: width 0.4s ease;
+}
+
+.loan-prog-fill.green { background: var(--finny-income); }
+.loan-prog-fill.purple { background: var(--finny-transfer); }
+
+.loan-pct-txt {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  width: 32px;
+  text-align: right;
+}
+
+.loan-subline {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   BOTTOM ROW: 4-COLUMN ACTIVITY, CATEGORIES, GAUGE & GOALS
+   -------------------------------------------------------------------------- */
+.dash-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+/* Recent Transactions List */
+.recent-txns-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recent-txn-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.recent-txn-row:last-child {
+  border-bottom: none;
+}
+
+.recent-txn-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.txn-avatar-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.txn-titles-col {
+  min-width: 0;
+}
+
+.txn-payee-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.txn-date-meta {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.recent-txn-amt {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.recent-txn-amt.expense { color: var(--finny-expense); }
+.recent-txn-amt.income { color: var(--finny-income); }
+.recent-txn-amt.transfer { color: var(--finny-transfer); }
+
+/* Top Spending Categories List */
+.top-cats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.top-cat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.top-cat-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.top-cat-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.top-cat-amt-bold {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.top-cat-prog-wrap {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-surface-secondary);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.top-cat-prog-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+}
+
+/* Income vs Expenses Radial / Arc Gauge */
+.gauge-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  position: relative;
+}
+
+.gauge-chart-container {
+  width: 160px;
+  height: 160px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gauge-center-stat {
+  position: absolute;
+  text-align: center;
+  pointer-events: none;
+}
+.gauge-center-stat .gauge-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+}
+.gauge-center-stat .gauge-sub {
+  font-size: 10px;
+  color: var(--finny-income);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.gauge-footer-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  margin-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+}
+
+.gauge-leg-item {
+  text-align: center;
+}
+.gauge-leg-item span {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: block;
+}
+.gauge-leg-item strong {
+  font-size: 13px;
+  font-weight: 700;
+  display: block;
+  margin-top: 2px;
+}
+.gauge-leg-item strong.income { color: var(--finny-income); }
+.gauge-leg-item strong.expense { color: var(--finny-expense); }
+
+/* Financial Goals List */
+.goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.goal-card-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goal-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.goal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.goal-icon-box {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+.goal-icon-box.green { background: #dcfce7; color: #16a34a; }
+.goal-icon-box.purple { background: #ede9fe; color: #7c3aed; }
+.goal-icon-box.orange { background: #ffedd5; color: #ea580c; }
+.goal-icon-box.teal { background: #ccfbf1; color: #0d9488; }
+
+.goal-title-wrap h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.goal-numbers-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+.goal-numbers-row .current-of-target {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.goal-numbers-row .goal-pct {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.goal-progress-wrap {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-surface-secondary);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.goal-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE DESIGN BREAKPOINTS
+   -------------------------------------------------------------------------- */
+@media (max-width: 1366px) {
+  .dash-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .dash-charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .dash-middle-grid {
+    grid-template-columns: 1fr;
+  }
+  .dash-bottom-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .dash-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dash-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}

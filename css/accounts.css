@@ -623,16 +623,9 @@
 
 .acc-filters-group .panel-select,
 .filter-dropdowns .acc-select {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 8px !important;
-  padding: 6px 10px !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  color: #334155 !important;
   height: 36px !important;
-  outline: none !important;
-  cursor: pointer;
+  font-size: 12px !important;
+  padding: 6px 32px 6px 12px !important;
 }
 
 .btn-toggle-all-months {
@@ -685,9 +678,9 @@
   gap: 18px;
   align-items: stretch;
   flex: 1;
-  min-height: 0;
-  height: calc(100vh - 225px);
-  max-height: calc(100vh - 225px);
+  min-height: 600px;
+  height: calc(100vh - 195px);
+  max-height: calc(100vh - 195px);
   overflow: hidden;
 }
 
@@ -990,8 +983,7 @@
   flex-direction: column;
 }
 
-.inspector-header,
-.details-header {
+.inspector-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1156,7 +1148,6 @@
 }
 
 .panel-input,
-.panel-select,
 .panel-textarea {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -1172,7 +1163,6 @@
 }
 
 .panel-input:focus,
-.panel-select:focus,
 .panel-textarea:focus {
   background: #ffffff;
   border-color: #2563eb;
